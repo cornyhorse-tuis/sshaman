@@ -70,8 +70,12 @@ class HostFormScreen(ModalScreen[HostEntry | None]):
         super().__init__()
         self._host = host
         self._config_files = config_files or [default_config_file]
-        self._default_config_file = default_config_file
-        self._selected_config_file = default_config_file
+        # Pick a valid default: prefer the caller's default, fall back to first.
+        if default_config_file in self._config_files:
+            self._default_config_file = default_config_file
+        else:
+            self._default_config_file = self._config_files[0]
+        self._selected_config_file = self._default_config_file
 
     def compose(self) -> ComposeResult:
         """Build the form."""

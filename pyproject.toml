@@ -19,6 +19,7 @@ sshaman = "cli.sshaman_cli:cli"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+asyncio_mode = "auto"
 addopts = [
     "--cov=backend",
     "--cov=cli",
