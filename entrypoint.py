@@ -1,10 +1,9 @@
-import sys
+"""SSHaMan entry point — delegates entirely to the Click CLI group.
 
-from cli import sshaman_cli
-from tui import tree
+The CLI itself handles the no-subcommand case by launching the TUI.
+"""
 
-if __name__ == '__main__':
-    if len(sys.argv) == 1:
-        tree.main()
-    else:
-        sshaman_cli.cli()
+from cli.sshaman_cli import cli
+
+if __name__ == "__main__":  # pragma: no cover — entry point guard
+    cli()

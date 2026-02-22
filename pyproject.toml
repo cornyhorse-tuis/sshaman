@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sshaman"
+version = "0.1.0"
+description = "SSH connection and config manager"
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.1.7",
+    "pydantic>=2.5.2",
+    "rich>=13.7.0",
+    "textual>=0.44.0",
+]
+
+[project.scripts]
+sshaman = "cli.sshaman_cli:cli"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = [
+    "--cov=backend",
+    "--cov=cli",
+    "--cov=tui",
+    "--cov-report=term-missing",
+    "--cov-report=html:htmlcov",
+    "--cov-fail-under=95",
+    "--cov-branch",
+]
+
+[tool.coverage.run]
+branch = true
+omit = [
+    "tests/*",
+    "entrypoint.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]
