@@ -259,3 +259,18 @@ class TestMigrateLive:
         content = (ssh_dir / "config.d" / "sshaman-migrated").read_text()
         assert "s3cr3t" not in content
         assert "password" not in content.lower()
+
+    def test_source_cleanup_reminder_set_after_real_migration(
+        self, legacy_config_dir: Path, ssh_dir: Path
+    ):
+        """After a real migration the result contains a reminder to clean up legacy files."""
+        mgr = SSHConfigManager(ssh_dir=ssh_dir)
+        result = migrate(source=legacy_config_dir, config_manager=mgr)
+        assert result.source_cleanup_reminder != ""
+        assert str(legacy_config_dir) in result.source_cleanup_reminder
+
+    def test_no_cleanup_reminder_on_dry_run(self, legacy_config_dir: Path, ssh_dir: Path):
+        """Dry-run migrations must not set the cleanup reminder (nothing was written)."""
+        mgr = SSHConfigManager(ssh_dir=ssh_dir)
+        result = migrate(source=legacy_config_dir, config_manager=mgr, dry_run=True)
+        assert result.source_cleanup_reminder == ""

@@ -6,8 +6,11 @@ no interactive prompts).  All filesystem mutations are explicit.
 
 from __future__ import annotations
 
+import datetime
 import os
+import shutil
 import stat
+import tempfile
 from pathlib import Path
 from typing import Optional
 
@@ -76,6 +79,14 @@ class SSHConfigManager:
         # Ensure Include directive is present
         existing = self.config_file.read_text(encoding="utf-8")
         if _INCLUDE_DIRECTIVE not in existing:
+            # Back up original before modifying (only if there is content to preserve)
+            if existing.strip():
+                timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+                backup = self.config_file.with_name(
+                    f"{self.config_file.name}.bak.{timestamp}"
+                )
+                shutil.copy2(self.config_file, backup)
+                _set_permissions(backup, _FILE_MODE)
             # Prepend so it takes effect before any other rules
             new_content = _INCLUDE_DIRECTIVE + "\n\n" + existing
             self._safe_write(self.config_file, new_content)
@@ -109,13 +120,8 @@ class SSHConfigManager:
             SSHConfigError: If ``name`` contains path separators or a file
                 with that name already exists.
         """
-        if os.sep in name or "/" in name:
-            raise SSHConfigError(
-                f"Config file name must not contain path separators: {name!r}"
-            )
-
         self.ensure_config_d_setup()
-        path = self.config_d / name
+        path = _validate_config_file_name(self.config_d, name)
 
         if path.exists():
             raise SSHConfigError(
@@ -135,7 +141,7 @@ class SSHConfigManager:
         Raises:
             SSHConfigError: If the file does not exist.
         """
-        path = self.config_d / name
+        path = _validate_config_file_name(self.config_d, name)
         if not path.exists():
             raise SSHConfigError(
                 f"Config file does not exist: {path}"
@@ -191,7 +197,7 @@ class SSHConfigManager:
                 (e.g. ``"sshaman-hosts"``).
         """
         self.ensure_config_d_setup()
-        path = self.config_d / config_file_name
+        path = _validate_config_file_name(self.config_d, config_file_name)
 
         if not path.exists():
             path.touch()
@@ -266,9 +272,15 @@ class SSHConfigManager:
             path: Destination file.
             content: Text to write.
         """
-        tmp = path.with_suffix(path.suffix + ".tmp")
-        tmp.write_text(content, encoding="utf-8")
-        tmp.replace(path)
+        fd, tmp_str = tempfile.mkstemp(dir=path.parent, prefix=path.name, suffix=".tmp")
+        tmp = Path(tmp_str)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as fh:
+                fh.write(content)
+            tmp.replace(path)
+        except Exception:
+            tmp.unlink(missing_ok=True)
+            raise
         _set_permissions(path, _FILE_MODE)
 
 
@@ -286,6 +298,36 @@ def _set_permissions(path: Path, mode: int) -> None:
     current = stat.S_IMODE(path.stat().st_mode)
     if current != mode:
         path.chmod(mode)
+
+
+def _validate_config_file_name(config_d: Path, name: str) -> Path:
+    """Validate ``name`` as a safe ``config.d`` filename and return its path.
+
+    Rejects empty names, names containing path separators or null bytes, and
+    the special components ``.`` and ``..`` that would allow directory traversal
+    without a separator character.
+
+    Args:
+        config_d: The ``config.d`` directory.
+        name: Caller-supplied filename.
+
+    Returns:
+        ``config_d / name`` when ``name`` is safe.
+
+    Raises:
+        SSHConfigError: If ``name`` is invalid.
+    """
+    if not name:
+        raise SSHConfigError("Config file name must not be empty.")
+    if "/" in name or os.sep in name or "\x00" in name:
+        raise SSHConfigError(
+            f"Config file name must not contain path separators or null bytes: {name!r}"
+        )
+    if name in (".", ".."):
+        raise SSHConfigError(
+            f"Config file name must not be '.' or '..': {name!r}"
+        )
+    return config_d / name
 
 
 def _split_into_blocks(text: str, source_file: Path) -> list[HostEntry]:
@@ -315,7 +357,7 @@ def _split_into_blocks(text: str, source_file: Path) -> list[HostEntry]:
         try:
             entry = HostEntry.from_ssh_config_block(current_block, source_file=source_file)
             entries.append(entry)
-        except (ValueError, Exception):
+        except ValueError:
             pass  # Malformed blocks are skipped silently
 
     for line in lines:

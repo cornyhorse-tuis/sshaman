@@ -444,6 +444,9 @@ def migrate(
     if dry_run:
         console.print("[dim]Run without --dry-run to apply.[/dim]")
 
+    if result.source_cleanup_reminder:
+        console.print(f"\n[yellow]⚠ Security reminder:[/yellow] {result.source_cleanup_reminder}")
+
 
 if __name__ == "__main__":  # pragma: no cover — entry point guard
     cli()

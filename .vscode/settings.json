@@ -28,6 +28,14 @@
         "/^source \\.venv/bin/activate && python3 -c \"\nfrom backend\\.ssh_config import _split_into_blocks\nfrom pathlib import Path\n\ntext = 'Host web-server\\\\n    HostName 192\\.168\\.1\\.100\\\\n'\ntry:\n    result = _split_into_blocks\\(text, Path\\('/tmp/test'\\)\\)\n    print\\(f'Found \\{len\\(result\\)\\} hosts'\\)\nexcept Exception as e:\n    print\\(f'Error: \\{e\\}'\\)\n\"$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^source \\.venv/bin/activate && python -m pytest tests/ -x -q --tb=short 2>&1 \\| tail -60$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^source \\.venv/bin/activate && python -m pytest tests/ -x -q --tb=short 2>&1 \\| tail -70$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

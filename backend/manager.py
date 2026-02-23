@@ -166,7 +166,9 @@ class SSHManager:
         """
         if self.get_host(name) is None:
             raise HostNotFoundError(f"Host not found: {name!r}")
-        return ["ssh", name]
+        # Use "--" to prevent a host alias starting with "-" from being
+        # interpreted as an SSH option flag.
+        return ["ssh", "--", name]
 
     def sftp_command(self, name: str) -> list[str]:
         """Build an SFTP argv list for the named host.
@@ -182,7 +184,7 @@ class SSHManager:
         """
         if self.get_host(name) is None:
             raise HostNotFoundError(f"Host not found: {name!r}")
-        return ["sftp", name]
+        return ["sftp", "--", name]
 
     # ------------------------------------------------------------------
     # Config-file management

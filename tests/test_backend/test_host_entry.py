@@ -112,6 +112,24 @@ class TestHostEntryConstruction:
         with pytest.raises(ValidationError):
             HostEntry(name="s", hostname="h", unknown_field="value")
 
+    def test_name_starting_with_dash_raises(self):
+        """A host alias starting with '-' would be treated as an SSH flag."""
+        with pytest.raises(ValidationError, match="SSH flag"):
+            HostEntry(name="-oProxyCommand=evil", hostname="h")
+
+    def test_name_starting_with_double_dash_raises(self):
+        with pytest.raises(ValidationError, match="SSH flag"):
+            HostEntry(name="--StrictHostKeyChecking=no", hostname="h")
+
+    def test_name_with_leading_whitespace_then_dash_raises(self):
+        with pytest.raises(ValidationError, match="SSH flag"):
+            HostEntry(name=" -o bad", hostname="h")
+
+    def test_name_with_internal_dash_allowed(self):
+        """Hyphens in the middle of a name are fine."""
+        entry = HostEntry(name="web-server", hostname="10.0.0.1")
+        assert entry.name == "web-server"
+
 
 # ---------------------------------------------------------------------------
 # to_ssh_config serialisation

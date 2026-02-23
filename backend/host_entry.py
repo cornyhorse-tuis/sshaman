@@ -73,6 +73,20 @@ class HostEntry(BaseModel):
             raise ValueError("Host name must not be empty")
         return v
 
+    @field_validator("name")
+    @classmethod
+    def name_must_not_start_with_dash(cls, v: str) -> str:
+        """Reject names starting with '-' to prevent SSH option injection.
+
+        A host alias beginning with '-' would be interpreted as an option flag
+        when passed directly to the ``ssh`` / ``sftp`` command.
+        """
+        if v.lstrip().startswith("-"):
+            raise ValueError(
+                "Host name must not start with '-' (would be treated as an SSH flag)"
+            )
+        return v
+
     @field_validator("hostname")
     @classmethod
     def hostname_must_not_be_empty(cls, v: str) -> str:

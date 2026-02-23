@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from textual.app import ComposeResult
@@ -161,6 +162,13 @@ class NewConfigFileScreen(ModalScreen[str | None]):
             value = self.query_one("#input-name", Input).value.strip()
             if not value:
                 self.notify("Name cannot be empty.", severity="error")
+                return
+            # Whitelist: only allow alphanumeric chars, hyphens, underscores, dots.
+            if not re.fullmatch(r"[A-Za-z0-9._-]+", value):
+                self.notify(
+                    "Name may only contain letters, digits, hyphens, underscores, and dots.",
+                    severity="error",
+                )
                 return
             self.dismiss(value)
 

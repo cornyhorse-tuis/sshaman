@@ -171,7 +171,7 @@ class TestRemoveHost:
 class TestConnectCommand:
     def test_returns_ssh_alias_list(self, manager: SSHManager):
         cmd = manager.connect_command("web-server")
-        assert cmd == ["ssh", "web-server"]
+        assert cmd == ["ssh", "--", "web-server"]
 
     def test_raises_when_host_not_found(self, manager: SSHManager):
         with pytest.raises(HostNotFoundError):
@@ -181,7 +181,7 @@ class TestConnectCommand:
 class TestSftpCommand:
     def test_returns_sftp_alias_list(self, manager: SSHManager):
         cmd = manager.sftp_command("web-server")
-        assert cmd == ["sftp", "web-server"]
+        assert cmd == ["sftp", "--", "web-server"]
 
     def test_raises_when_host_not_found(self, manager: SSHManager):
         with pytest.raises(HostNotFoundError):

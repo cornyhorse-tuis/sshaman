@@ -13,8 +13,41 @@ from backend.ssh_config import (
     SSHConfigManager,
     _remove_block_from_text,
     _split_into_blocks,
+    _validate_config_file_name,
     _INCLUDE_DIRECTIVE,
 )
+
+
+# ---------------------------------------------------------------------------
+# _validate_config_file_name
+# ---------------------------------------------------------------------------
+
+class TestValidateConfigFileName:
+    def test_valid_name_returns_path(self, tmp_path):
+        config_d = tmp_path / "config.d"
+        config_d.mkdir()
+        path = _validate_config_file_name(config_d, "10-work")
+        assert path == config_d / "10-work"
+
+    def test_empty_name_raises(self, tmp_path):
+        with pytest.raises(SSHConfigError, match="empty"):
+            _validate_config_file_name(tmp_path, "")
+
+    def test_slash_in_name_raises(self, tmp_path):
+        with pytest.raises(SSHConfigError, match="path separators"):
+            _validate_config_file_name(tmp_path, "sub/file")
+
+    def test_null_byte_raises(self, tmp_path):
+        with pytest.raises(SSHConfigError, match="null bytes"):
+            _validate_config_file_name(tmp_path, "file\x00bad")
+
+    def test_dotdot_raises(self, tmp_path):
+        with pytest.raises(SSHConfigError):
+            _validate_config_file_name(tmp_path, "..")
+
+    def test_dot_raises(self, tmp_path):
+        with pytest.raises(SSHConfigError):
+            _validate_config_file_name(tmp_path, ".")
 
 
 # ---------------------------------------------------------------------------
@@ -38,6 +71,29 @@ def permissions(path: Path) -> int:
 # ---------------------------------------------------------------------------
 
 class TestEnsureConfigDSetup:
+    def test_backup_created_when_config_has_content(self, tmp_path):
+        """A timestamped backup of ~/.ssh/config is made before prepending Include."""
+        ssh = tmp_path / ".ssh"
+        ssh.mkdir()
+        cfg = ssh / "config"
+        original_content = "Host old-entry\n    HostName 1.2.3.4\n"
+        cfg.write_text(original_content, encoding="utf-8")
+        mgr = SSHConfigManager(ssh_dir=ssh)
+        mgr.ensure_config_d_setup()
+        backups = list(ssh.glob("config.bak.*"))
+        assert len(backups) == 1, "Expected exactly one backup file"
+        assert backups[0].read_text(encoding="utf-8") == original_content
+
+    def test_no_backup_when_config_is_empty(self, tmp_path):
+        """No backup is created when config is empty (nothing to preserve)."""
+        ssh = tmp_path / ".ssh"
+        ssh.mkdir()
+        (ssh / "config").write_text("", encoding="utf-8")
+        mgr = SSHConfigManager(ssh_dir=ssh)
+        mgr.ensure_config_d_setup()
+        backups = list(ssh.glob("config.bak.*"))
+        assert backups == [], "No backup expected for an empty config"
+
     def test_creates_config_d_when_missing(self, tmp_path):
         ssh = tmp_path / ".ssh"
         ssh.mkdir()
@@ -156,6 +212,16 @@ class TestCreateConfigFile:
         with pytest.raises(SSHConfigError, match="path separators"):
             mgr.create_config_file("sub/file")
 
+    def test_raises_on_dotdot_traversal(self, ssh_dir):
+        mgr = SSHConfigManager(ssh_dir=ssh_dir)
+        with pytest.raises(SSHConfigError):
+            mgr.create_config_file("..")
+
+    def test_raises_on_empty_name(self, ssh_dir):
+        mgr = SSHConfigManager(ssh_dir=ssh_dir)
+        with pytest.raises(SSHConfigError, match="empty"):
+            mgr.create_config_file("")
+
     def test_file_is_empty(self, ssh_dir):
         mgr = SSHConfigManager(ssh_dir=ssh_dir)
         path = mgr.create_config_file("empty")
@@ -176,6 +242,16 @@ class TestDeleteConfigFile:
         mgr = SSHConfigManager(ssh_dir=ssh_dir)
         with pytest.raises(SSHConfigError, match="does not exist"):
             mgr.delete_config_file("nonexistent")
+
+    def test_raises_on_path_separator_in_name(self, sample_ssh_dir):
+        mgr = SSHConfigManager(ssh_dir=sample_ssh_dir)
+        with pytest.raises(SSHConfigError, match="path separators"):
+            mgr.delete_config_file("../config")
+
+    def test_raises_on_dotdot_traversal(self, sample_ssh_dir):
+        mgr = SSHConfigManager(ssh_dir=sample_ssh_dir)
+        with pytest.raises(SSHConfigError):
+            mgr.delete_config_file("..")
 
 
 # ---------------------------------------------------------------------------
@@ -255,6 +331,16 @@ class TestWriteHost:
         mgr.write_host(make_entry(), "new-file")
         path = ssh_dir / "config.d" / "new-file"
         assert permissions(path) == 0o600
+
+    def test_raises_on_path_separator_in_config_file_name(self, ssh_dir):
+        mgr = SSHConfigManager(ssh_dir=ssh_dir)
+        with pytest.raises(SSHConfigError, match="path separators"):
+            mgr.write_host(make_entry(), "../injected")
+
+    def test_raises_on_dotdot_config_file_name(self, ssh_dir):
+        mgr = SSHConfigManager(ssh_dir=ssh_dir)
+        with pytest.raises(SSHConfigError):
+            mgr.write_host(make_entry(), "..")
 
 
 # ---------------------------------------------------------------------------

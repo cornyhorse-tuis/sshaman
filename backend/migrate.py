@@ -42,6 +42,7 @@ class MigrationResult:
     warnings: dict[str, list[str]] = field(default_factory=dict)
     errors: dict[str, str] = field(default_factory=dict)
     dry_run: bool = False
+    source_cleanup_reminder: str = ""
 
 
 def discover_json_configs(source: Path) -> list[tuple[Path, dict]]:
@@ -200,5 +201,12 @@ def migrate(
     if not dry_run:
         for entry in result.migrated:
             mgr.write_host(entry, config_file)
+
+    if not dry_run and result.migrated:
+        result.source_cleanup_reminder = (
+            f"Legacy configs remain at {source}. "
+            "If any contained passwords, securely delete them: "
+            f"  rm -rf {source}"
+        )
 
     return result
