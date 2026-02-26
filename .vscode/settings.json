@@ -36,6 +36,10 @@
         "/^source \\.venv/bin/activate && python -m pytest tests/ -x -q --tb=short 2>&1 \\| tail -70$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^source \\.venv/bin/activate && python -m pytest tests/ -v --tb=short 2>&1 \\| tail -80$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }
