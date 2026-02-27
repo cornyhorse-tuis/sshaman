@@ -5,9 +5,7 @@ Every test uses ``tmp_path`` fixtures — no real ``~/.ssh/`` is touched.
 
 from __future__ import annotations
 
-import asyncio
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from textual.widgets import Button, DataTable, Input
@@ -52,29 +50,30 @@ class TestAppStartup:
     async def test_app_starts_and_shows_hosts(self, tui_manager: SSHManager) -> None:
         """App should mount and populate the host table with 3 hosts."""
         app = SSHaManApp(manager=tui_manager)
-        async with app.run_test(size=SCREEN_SIZE) as pilot:
+        async with app.run_test(size=SCREEN_SIZE) as _:
             table = app.query_one("#host-table", DataTable)
             assert table.row_count == 3
 
     async def test_app_starts_empty(self, empty_tui_manager: SSHManager) -> None:
         """App with no hosts should show an empty table."""
         app = SSHaManApp(manager=empty_tui_manager)
-        async with app.run_test(size=SCREEN_SIZE) as pilot:
+        async with app.run_test(size=SCREEN_SIZE) as _:
             table = app.query_one("#host-table", DataTable)
             assert table.row_count == 0
 
     async def test_app_has_header_and_footer(self, tui_manager: SSHManager) -> None:
         """App should compose Header and Footer."""
         app = SSHaManApp(manager=tui_manager)
-        async with app.run_test(size=SCREEN_SIZE) as pilot:
+        async with app.run_test(size=SCREEN_SIZE) as _:
             from textual.widgets import Header, Footer
+
             assert len(app.query(Header)) == 1
             assert len(app.query(Footer)) == 1
 
     async def test_app_has_filter_input(self, tui_manager: SSHManager) -> None:
         """App should have a filter input."""
         app = SSHaManApp(manager=tui_manager)
-        async with app.run_test(size=SCREEN_SIZE) as pilot:
+        async with app.run_test(size=SCREEN_SIZE) as _:
             inp = app.query_one("#filter-input", Input)
             assert inp.placeholder == "Filter hosts…"
 
@@ -178,7 +177,9 @@ class TestSSHConnection:
         action, host = app.return_value
         assert action == "sftp"
 
-    async def test_connect_ssh_no_selection(self, empty_tui_manager: SSHManager) -> None:
+    async def test_connect_ssh_no_selection(
+        self, empty_tui_manager: SSHManager
+    ) -> None:
         """SSH connect with no hosts should not crash."""
         app = SSHaManApp(manager=empty_tui_manager)
         async with app.run_test(size=SCREEN_SIZE) as pilot:
@@ -189,7 +190,9 @@ class TestSSHConnection:
         # Should not have exited with a result
         assert app.return_value is None
 
-    async def test_connect_sftp_no_selection(self, empty_tui_manager: SSHManager) -> None:
+    async def test_connect_sftp_no_selection(
+        self, empty_tui_manager: SSHManager
+    ) -> None:
         """SFTP connect with no hosts should not crash."""
         app = SSHaManApp(manager=empty_tui_manager)
         async with app.run_test(size=SCREEN_SIZE) as pilot:
@@ -359,7 +362,9 @@ class TestConfirmScreen:
         results: list[bool] = []
 
         async with app.run_test(size=SCREEN_SIZE) as pilot:
-            await app.push_screen(ConfirmScreen("Delete this?"), callback=results.append)
+            await app.push_screen(
+                ConfirmScreen("Delete this?"), callback=results.append
+            )
             await pilot.pause()
             await pilot.click("#confirm-yes")
             await pilot.pause()
@@ -372,7 +377,9 @@ class TestConfirmScreen:
         results: list[bool] = []
 
         async with app.run_test(size=SCREEN_SIZE) as pilot:
-            await app.push_screen(ConfirmScreen("Delete this?"), callback=results.append)
+            await app.push_screen(
+                ConfirmScreen("Delete this?"), callback=results.append
+            )
             await pilot.pause()
             await pilot.click("#confirm-no")
             await pilot.pause()
@@ -895,7 +902,7 @@ class TestGetSelectedHostName:
     async def test_returns_none_when_empty(self, empty_tui_manager: SSHManager) -> None:
         """Should return None when table is empty."""
         app = SSHaManApp(manager=empty_tui_manager)
-        async with app.run_test(size=SCREEN_SIZE) as pilot:
+        async with app.run_test(size=SCREEN_SIZE) as _:
             result = app._get_selected_host_name()
             assert result is None
 
@@ -1038,7 +1045,7 @@ class TestConfigFilesNewFileCallback:
             await app.push_screen(screen)
             await pilot.pause()
 
-            # Create it first  
+            # Create it first
             screen._on_new_file("60-dup-test")
             await pilot.pause()
 
@@ -1090,7 +1097,9 @@ class TestHostFormWithMultipleConfigFiles:
 
             app.screen.query_one("#input-name", Input).value = "id-host"
             app.screen.query_one("#input-hostname", Input).value = "1.2.3.4"
-            app.screen.query_one("#input-identity-file", Input).value = "~/.ssh/id_ed25519"
+            app.screen.query_one(
+                "#input-identity-file", Input
+            ).value = "~/.ssh/id_ed25519"
 
             app.screen.query_one("#btn-save", Button).press()
             await pilot.pause()
@@ -1113,7 +1122,7 @@ class TestGetSelectedHostNameException:
     ) -> None:
         """If coordinate_to_cell_key raises, return None instead of crashing."""
         app = SSHaManApp(manager=tui_manager)
-        async with app.run_test(size=SCREEN_SIZE) as pilot:
+        async with app.run_test(size=SCREEN_SIZE) as _:
             table = app.query_one("#host-table", DataTable)
             original = table.coordinate_to_cell_key
 
@@ -1130,9 +1139,7 @@ class TestGetSelectedHostNameException:
 class TestRowSelectedHostNotFound:
     """Cover on_data_table_row_selected when host is None (line 135)."""
 
-    async def test_row_selected_host_deleted(
-        self, tui_manager: SSHManager
-    ) -> None:
+    async def test_row_selected_host_deleted(self, tui_manager: SSHManager) -> None:
         """If the host was deleted between display and selection, no crash."""
         app = SSHaManApp(manager=tui_manager)
         async with app.run_test(size=SCREEN_SIZE) as pilot:
@@ -1146,9 +1153,7 @@ class TestRowSelectedHostNotFound:
             await pilot.pause()
             tui_manager.get_host = original_get_host
             # Should NOT have pushed a detail screen
-            assert not any(
-                isinstance(s, HostDetailScreen) for s in app.screen_stack
-            )
+            assert not any(isinstance(s, HostDetailScreen) for s in app.screen_stack)
 
 
 class TestDetailResultHostNameNone:
@@ -1186,9 +1191,7 @@ class TestEditHostGetHostNone:
             await pilot.pause()
             tui_manager.get_host = original_get_host
             # No form should appear
-            assert not any(
-                isinstance(s, HostFormScreen) for s in app.screen_stack
-            )
+            assert not any(isinstance(s, HostFormScreen) for s in app.screen_stack)
 
 
 class TestDeleteConfirmedHostGone:
@@ -1248,9 +1251,7 @@ class TestAddHostResultNoConfigAttr:
 class TestNewConfigFileRejectsInvalidName:
     """Cover NewConfigFileScreen regex rejection (lines 168-172)."""
 
-    async def test_name_with_spaces_rejected(
-        self, tui_manager: SSHManager
-    ) -> None:
+    async def test_name_with_spaces_rejected(self, tui_manager: SSHManager) -> None:
         """Names with spaces should be rejected."""
         app = SSHaManApp(manager=tui_manager)
         results: list[str | None] = []
@@ -1308,8 +1309,6 @@ class TestHostFormValidationError:
             app.screen.query_one("#input-hostname", Input).value = "example.com"
 
             # Monkeypatch HostEntry to raise on construction
-            original_init = HostEntry.__init__
-
             def broken_init(self, **kwargs):
                 raise ValueError("synthetic validation error")
 
@@ -1340,9 +1339,7 @@ class TestHostFormSelectChangedBranch:
 
             original = screen._selected_config_file
             # Simulate a select-changed event from a different select widget
-            fake_select = Select(
-                [("x", "x")], id="other-select"
-            )
+            fake_select = Select([("x", "x")], id="other-select")
             event = Select.Changed(fake_select, "x")
             screen.on_select_changed(event)
             await pilot.pause()
@@ -1354,9 +1351,7 @@ class TestHostFormSelectChangedBranch:
 class TestConfigFilesButtonFallthrough:
     """Cover ConfigFilesScreen on_button_pressed fallthrough (line 92->exit)."""
 
-    async def test_unknown_button_is_noop(
-        self, tui_manager: SSHManager
-    ) -> None:
+    async def test_unknown_button_is_noop(self, tui_manager: SSHManager) -> None:
         """A button with an unrecognized id should be a no-op."""
         app = SSHaManApp(manager=tui_manager)
 
@@ -1379,9 +1374,7 @@ class TestConfigFilesButtonFallthrough:
 class TestNewConfigFileButtonFallthrough:
     """Cover NewConfigFileScreen on_button_pressed fallthrough (line 161->exit)."""
 
-    async def test_unknown_button_is_noop(
-        self, tui_manager: SSHManager
-    ) -> None:
+    async def test_unknown_button_is_noop(self, tui_manager: SSHManager) -> None:
         """A button with an unrecognized id in NewConfigFileScreen is a no-op."""
         app = SSHaManApp(manager=tui_manager)
         results: list[str | None] = []

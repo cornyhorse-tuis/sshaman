@@ -16,6 +16,7 @@ from backend.ssh_config import SSHConfigManager
 # SSH directory fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def ssh_dir(tmp_path: Path) -> Path:
     """Return a temporary ~/.ssh/ equivalent with config.d/ already created.
@@ -68,11 +69,7 @@ def sample_ssh_dir(ssh_dir: Path) -> Path:
 
     extra_hosts = ssh_dir / "config.d" / "extra-hosts"
     extra_hosts.write_text(
-        "Host jump-box\n"
-        "    HostName 10.0.0.1\n"
-        "    User ops\n"
-        "    Port 22\n"
-        "\n",
+        "Host jump-box\n    HostName 10.0.0.1\n    User ops\n    Port 22\n\n",
         encoding="utf-8",
     )
     extra_hosts.chmod(0o600)
@@ -83,6 +80,7 @@ def sample_ssh_dir(ssh_dir: Path) -> Path:
 # ---------------------------------------------------------------------------
 # Manager / config-manager fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def config_manager(sample_ssh_dir: Path) -> SSHConfigManager:
@@ -111,6 +109,7 @@ def empty_manager(ssh_dir: Path) -> SSHManager:
 # ---------------------------------------------------------------------------
 # Legacy JSON config fixtures (for migration tests)
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def legacy_config_dir(tmp_path: Path) -> Path:

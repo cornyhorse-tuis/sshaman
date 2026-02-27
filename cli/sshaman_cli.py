@@ -27,6 +27,7 @@ err_console = Console(stderr=True, style="bold red")
 # Root group
 # ---------------------------------------------------------------------------
 
+
 @click.group(invoke_without_command=True)
 @click.option(
     "--ssh-dir",
@@ -63,8 +64,11 @@ def cli(ctx: click.Context, ssh_dir: Optional[Path]) -> None:
 # list
 # ---------------------------------------------------------------------------
 
+
 @cli.command("list")
-@click.option("--filter", "-f", "pattern", default=None, help="Filter by name, hostname, or user.")
+@click.option(
+    "--filter", "-f", "pattern", default=None, help="Filter by name, hostname, or user."
+)
 @click.pass_context
 def list_hosts(ctx: click.Context, pattern: Optional[str]) -> None:
     """List all SSH hosts."""
@@ -98,6 +102,7 @@ def list_hosts(ctx: click.Context, pattern: Optional[str]) -> None:
 # show
 # ---------------------------------------------------------------------------
 
+
 @cli.command()
 @click.argument("host")
 @click.pass_context
@@ -128,12 +133,15 @@ def show(ctx: click.Context, host: str) -> None:
             lines.append(f"[bold]{k.capitalize()}:[/bold] {v}")
 
     source = entry.source_file.name if entry.source_file else "unknown"
-    console.print(Panel("\n".join(lines), title=f"[bold]{entry.name}[/bold]", subtitle=source))
+    console.print(
+        Panel("\n".join(lines), title=f"[bold]{entry.name}[/bold]", subtitle=source)
+    )
 
 
 # ---------------------------------------------------------------------------
 # add
 # ---------------------------------------------------------------------------
+
 
 @cli.command()
 @click.argument("name")
@@ -142,7 +150,10 @@ def show(ctx: click.Context, host: str) -> None:
 @click.option("--port", "-p", default=22, show_default=True, help="SSH port.")
 @click.option("--identity-file", "-i", default=None, help="Path to private key.")
 @click.option(
-    "--config-file", "-c", default="sshaman-hosts", show_default=True,
+    "--config-file",
+    "-c",
+    default="sshaman-hosts",
+    show_default=True,
     help="Target config.d filename.",
 )
 @click.pass_context
@@ -167,7 +178,9 @@ def add(
 
     try:
         mgr.add_host(entry, config_file=config_file)
-        console.print(f"[green]✓[/green] Added host [bold]{name}[/bold] to [dim]{config_file}[/dim].")
+        console.print(
+            f"[green]✓[/green] Added host [bold]{name}[/bold] to [dim]{config_file}[/dim]."
+        )
     except DuplicateHostError as exc:
         err_console.print(str(exc))
         ctx.exit(1)
@@ -176,6 +189,7 @@ def add(
 # ---------------------------------------------------------------------------
 # edit
 # ---------------------------------------------------------------------------
+
 
 @cli.command()
 @click.argument("host")
@@ -220,6 +234,7 @@ def edit(
 # remove
 # ---------------------------------------------------------------------------
 
+
 @cli.command()
 @click.argument("host")
 @click.option("--yes", "-y", is_flag=True, help="Skip confirmation prompt.")
@@ -243,6 +258,7 @@ def remove(ctx: click.Context, host: str, yes: bool) -> None:
 # connect
 # ---------------------------------------------------------------------------
 
+
 @cli.command()
 @click.argument("host")
 @click.pass_context
@@ -260,6 +276,7 @@ def connect(ctx: click.Context, host: str) -> None:
 # ---------------------------------------------------------------------------
 # sftp
 # ---------------------------------------------------------------------------
+
 
 @cli.command()
 @click.argument("host")
@@ -279,6 +296,7 @@ def sftp(ctx: click.Context, host: str) -> None:
 # search
 # ---------------------------------------------------------------------------
 
+
 @cli.command()
 @click.argument("pattern")
 @click.pass_context
@@ -290,6 +308,7 @@ def search(ctx: click.Context, pattern: str) -> None:
 # ---------------------------------------------------------------------------
 # config subgroup
 # ---------------------------------------------------------------------------
+
 
 @cli.group("config")
 def config_group() -> None:
@@ -313,7 +332,9 @@ def config_list(ctx: click.Context) -> None:
 
     all_hosts = mgr.list_hosts()
     for path in files:
-        count = sum(1 for h in all_hosts if h.source_file and h.source_file.name == path.name)
+        count = sum(
+            1 for h in all_hosts if h.source_file and h.source_file.name == path.name
+        )
         table.add_row(path.name, str(count))
 
     console.print(table)
@@ -379,6 +400,7 @@ def config_init(ctx: click.Context) -> None:
 # migrate
 # ---------------------------------------------------------------------------
 
+
 @cli.command()
 @click.option(
     "--source",
@@ -387,10 +409,14 @@ def config_init(ctx: click.Context) -> None:
     help="Path to legacy SSHaMan directory (default: ~/.config/sshaman).",
 )
 @click.option(
-    "--config-file", default="sshaman-migrated", show_default=True,
+    "--config-file",
+    default="sshaman-migrated",
+    show_default=True,
     help="Target config.d filename.",
 )
-@click.option("--dry-run", is_flag=True, help="Show what would be migrated without writing.")
+@click.option(
+    "--dry-run", is_flag=True, help="Show what would be migrated without writing."
+)
 @click.option("--force", is_flag=True, help="Overwrite existing target config file.")
 @click.pass_context
 def migrate(
@@ -436,13 +462,17 @@ def migrate(
         console.print(f"  [red]✗[/red] {path}: {err}")
 
     action = "Would write" if dry_run else "Wrote"
-    console.print(f"\n{action} [bold]{len(result.migrated)}[/bold] host(s) to [dim]{config_file}[/dim].")
+    console.print(
+        f"\n{action} [bold]{len(result.migrated)}[/bold] host(s) to [dim]{config_file}[/dim]."
+    )
 
     if dry_run:
         console.print("[dim]Run without --dry-run to apply.[/dim]")
 
     if result.source_cleanup_reminder:
-        console.print(f"\n[yellow]⚠ Security reminder:[/yellow] {result.source_cleanup_reminder}")
+        console.print(
+            f"\n[yellow]⚠ Security reminder:[/yellow] {result.source_cleanup_reminder}"
+        )
 
 
 if __name__ == "__main__":  # pragma: no cover — entry point guard

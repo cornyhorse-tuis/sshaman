@@ -58,6 +58,17 @@ sshaman/
 └── requirements.txt
 ```
 
+## Linting
+
+Run `./scripts/lint.sh` after every non-trivial edit session (new files, refactors, dependency changes):
+
+```bash
+./scripts/lint.sh          # check only
+./scripts/lint.sh --fix    # apply safe auto-fixes
+```
+
+This runs `ruff check` (error/style rules) followed by `ruff format --check`. Address all reported errors before committing — the CI pipeline enforces a clean ruff run. Never use `# noqa` to silence a rule without a comment explaining why.
+
 ## Testing
 
 - Use `tmp_path` pytest fixtures — never write to real `~/.ssh/` in tests.

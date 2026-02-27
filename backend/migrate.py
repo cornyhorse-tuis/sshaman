@@ -112,16 +112,16 @@ def convert_json_to_host_entry(
     except ValueError:
         comment_text = "# Migrated by SSHaMan"
 
-    local_forwards: list[str] = [
-        fp for fp in (data.get("forward_ports") or []) if fp
-    ]
+    local_forwards: list[str] = [fp for fp in (data.get("forward_ports") or []) if fp]
 
     entry = HostEntry(
         name=alias,
         hostname=data["host"],
         user=data.get("user") or None,
         port=int(data.get("port", 22)),
-        identity_file=Path(data["identity_file"]) if data.get("identity_file") else None,
+        identity_file=Path(data["identity_file"])
+        if data.get("identity_file")
+        else None,
         local_forwards=local_forwards,
         comment=comment_text,
     )

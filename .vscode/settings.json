@@ -81,6 +81,8 @@
         "/^source \\.venv/bin/activate && python -m pytest tests/ -q --tb=line 2>&1 \\| tail -30$/": {
             "approve": true,
             "matchCommandLine": true
-        }
+        },
+        ".venv/bin/ruff": true,
+        "ruff": true
     }
 }

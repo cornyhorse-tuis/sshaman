@@ -19,6 +19,7 @@ from backend.ssh_config import SSHConfigError, SSHConfigManager
 # discover_json_configs
 # ---------------------------------------------------------------------------
 
+
 class TestDiscoverJsonConfigs:
     def test_finds_all_json_files(self, legacy_config_dir: Path):
         results = discover_json_configs(legacy_config_dir)
@@ -59,6 +60,7 @@ class TestDiscoverJsonConfigs:
 # ---------------------------------------------------------------------------
 # convert_json_to_host_entry
 # ---------------------------------------------------------------------------
+
 
 class TestConvertJsonToHostEntry:
     def _base_data(self, **overrides) -> dict:
@@ -156,6 +158,7 @@ class TestConvertJsonToHostEntry:
 # migrate — dry run
 # ---------------------------------------------------------------------------
 
+
 class TestMigrateDryRun:
     def test_dry_run_does_not_write(self, legacy_config_dir: Path, ssh_dir: Path):
         mgr = SSHConfigManager(ssh_dir=ssh_dir)
@@ -172,7 +175,9 @@ class TestMigrateDryRun:
         # vm2 has a password — should produce a warning
         assert "vm2" in result.warnings
 
-    def test_dry_run_no_errors_on_valid_data(self, legacy_config_dir: Path, ssh_dir: Path):
+    def test_dry_run_no_errors_on_valid_data(
+        self, legacy_config_dir: Path, ssh_dir: Path
+    ):
         mgr = SSHConfigManager(ssh_dir=ssh_dir)
         result = migrate(source=legacy_config_dir, config_manager=mgr, dry_run=True)
         assert result.errors == {}
@@ -182,10 +187,11 @@ class TestMigrateDryRun:
 # migrate — live run
 # ---------------------------------------------------------------------------
 
+
 class TestMigrateLive:
     def test_writes_hosts_to_config_file(self, legacy_config_dir: Path, ssh_dir: Path):
         mgr = SSHConfigManager(ssh_dir=ssh_dir)
-        result = migrate(source=legacy_config_dir, config_manager=mgr)
+        migrate(source=legacy_config_dir, config_manager=mgr)
         assert (ssh_dir / "config.d" / "sshaman-migrated").exists()
         hosts = mgr.read_hosts_from_file(ssh_dir / "config.d" / "sshaman-migrated")
         names = {h.name for h in hosts}
@@ -205,9 +211,7 @@ class TestMigrateLive:
         mgr = SSHConfigManager(ssh_dir=ssh_dir)
         migrate(source=legacy_config_dir, config_manager=mgr)
         # Second run with force — should not raise
-        result = migrate(
-            source=legacy_config_dir, config_manager=mgr, force=True
-        )
+        result = migrate(source=legacy_config_dir, config_manager=mgr, force=True)
         assert len(result.migrated) == 3
 
     def test_custom_config_file_name(self, legacy_config_dir: Path, ssh_dir: Path):
@@ -238,9 +242,15 @@ class TestMigrateLive:
         for i in range(2):
             (src / f"srv{i}.json").write_text(
                 json.dumps(
-                    {"alias": "same-name", "host": f"10.0.0.{i+1}", "port": 22,
-                     "user": "u", "identity_file": None, "forward_ports": [],
-                     "start_commands": []}
+                    {
+                        "alias": "same-name",
+                        "host": f"10.0.0.{i + 1}",
+                        "port": 22,
+                        "user": "u",
+                        "identity_file": None,
+                        "forward_ports": [],
+                        "start_commands": [],
+                    }
                 )
             )
         mgr = SSHConfigManager(ssh_dir=ssh_dir)
@@ -254,9 +264,17 @@ class TestMigrateLive:
         src.mkdir()
         # Valid entry
         (src / "good.json").write_text(
-            json.dumps({"alias": "good", "host": "1.2.3.4", "port": 22,
-                        "user": "u", "identity_file": None, "forward_ports": [],
-                        "start_commands": []})
+            json.dumps(
+                {
+                    "alias": "good",
+                    "host": "1.2.3.4",
+                    "port": 22,
+                    "user": "u",
+                    "identity_file": None,
+                    "forward_ports": [],
+                    "start_commands": [],
+                }
+            )
         )
         # Entry missing "alias"
         (src / "bad.json").write_text(json.dumps({"host": "1.2.3.4"}))
@@ -281,13 +299,17 @@ class TestMigrateLive:
         assert result.source_cleanup_reminder != ""
         assert str(legacy_config_dir) in result.source_cleanup_reminder
 
-    def test_no_cleanup_reminder_on_dry_run(self, legacy_config_dir: Path, ssh_dir: Path):
+    def test_no_cleanup_reminder_on_dry_run(
+        self, legacy_config_dir: Path, ssh_dir: Path
+    ):
         """Dry-run migrations must not set the cleanup reminder (nothing was written)."""
         mgr = SSHConfigManager(ssh_dir=ssh_dir)
         result = migrate(source=legacy_config_dir, config_manager=mgr, dry_run=True)
         assert result.source_cleanup_reminder == ""
 
-    def test_force_overwrites_existing_target(self, legacy_config_dir: Path, ssh_dir: Path):
+    def test_force_overwrites_existing_target(
+        self, legacy_config_dir: Path, ssh_dir: Path
+    ):
         """force=True allows re-running migration to an existing target file."""
         mgr = SSHConfigManager(ssh_dir=ssh_dir)
         # First migration creates the target file
@@ -298,9 +320,7 @@ class TestMigrateLive:
 
         # Second migration without force should fail
         with pytest.raises(SSHConfigError, match="already exists"):
-            migrate(
-                source=legacy_config_dir, config_manager=mgr, config_file="target"
-            )
+            migrate(source=legacy_config_dir, config_manager=mgr, config_file="target")
 
         # With force=True it should succeed
         result2 = migrate(
