@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# Run the full test suite with branch coverage and open the HTML report.
+#
+# Usage:
+#   ./scripts/test              # run tests (fail under 95 % coverage)
+#   ./scripts/test --open       # run tests and open the HTML report when done
+#   ./scripts/test --fast       # skip coverage (faster feedback loop)
+#   ./scripts/test -k "pattern" # forward any extra args straight to pytest
+
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$REPO_ROOT"
+
+# ---------------------------------------------------------------------------
+# Parse our own flags before forwarding the rest to pytest
+# ---------------------------------------------------------------------------
+OPEN_REPORT=0
+FAST=0
+PYTEST_ARGS=()
+
+for arg in "$@"; do
+  case "$arg" in
+    --open) OPEN_REPORT=1 ;;
+    --fast) FAST=1 ;;
+    *)      PYTEST_ARGS+=("$arg") ;;
+  esac
+done
+
+# ---------------------------------------------------------------------------
+# Activate virtual environment if one exists and we're not already inside it
+# ---------------------------------------------------------------------------
+if [[ -z "${VIRTUAL_ENV:-}" && -f "$REPO_ROOT/.venv/bin/activate" ]]; then
+  # shellcheck disable=SC1091
+  source "$REPO_ROOT/.venv/bin/activate"
+fi
+
+# ---------------------------------------------------------------------------
+# Build the pytest command
+# ---------------------------------------------------------------------------
+if [[ $FAST -eq 1 ]]; then
+  # Strip coverage flags that come from pyproject.toml addopts via -p no:cacheprovider
+  CMD=(python -m pytest tests/ -p no:cacheprovider --no-cov "${PYTEST_ARGS[@]}")
+else
+  CMD=(python -m pytest tests/ "${PYTEST_ARGS[@]}")
+fi
+
+echo "▶ ${CMD[*]}"
+"${CMD[@]}"
+
+# ---------------------------------------------------------------------------
+# Open the HTML report in the default browser (macOS / Linux)
+# ---------------------------------------------------------------------------
+if [[ $OPEN_REPORT -eq 1 && $FAST -eq 0 ]]; then
+  REPORT="$REPO_ROOT/htmlcov/index.html"
+  if [[ -f "$REPORT" ]]; then
+    echo "▶ Opening coverage report: $REPORT"
+    if command -v open &>/dev/null; then
+      open "$REPORT"           # macOS
+    elif command -v xdg-open &>/dev/null; then
+      xdg-open "$REPORT"       # Linux
+    else
+      echo "  (cannot auto-open — open $REPORT manually)"
+    fi
+  fi
+fi

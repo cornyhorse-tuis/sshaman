@@ -1,0 +1,86 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^python -m pytest tests/test_backend/ tests/test_cli\\.py -v --tb=short 2>&1 \\| tail -80$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^which python3 && python3 --version$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "pip": true,
+        "/^source \\.venv/bin/activate && pip install -r requirements\\.txt 2>&1 \\| tail -10$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^source \\.venv/bin/activate && python -m pytest tests/test_backend/ tests/test_cli\\.py -v --tb=short --no-header 2>&1 \\| tail -80$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^source \\.venv/bin/activate && python -m pytest tests/test_backend/test_ssh_config\\.py::TestReadHostsFromFile::test_reads_two_hosts -v --tb=long 2>&1 \\| tail -40$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^source \\.venv/bin/activate && python3 -c \"\nfrom backend\\.ssh_config import _split_into_blocks\nfrom pathlib import Path\n\ntext = '''# Test hosts file\n\nHost web-server\n    HostName 192\\.168\\.1\\.100\n    User admin\n    Port 22\n    IdentityFile ~/\\.ssh/id_rsa\n\nHost db-server\n    HostName 192\\.168\\.1\\.101\n    User postgres\n    Port 5432\n\n'''\nresult = _split_into_blocks\\(text, Path\\('/tmp/test'\\)\\)\nprint\\(f'Found \\{len\\(result\\)\\} hosts'\\)\nfor h in result:\n    print\\(f'  \\{h\\.name\\} -> \\{h\\.hostname\\}'\\)\n\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^source \\.venv/bin/activate && python3 -c \"\nfrom backend\\.ssh_config import _split_into_blocks\nfrom pathlib import Path\n\ntext = 'Host web-server\\\\n    HostName 192\\.168\\.1\\.100\\\\n'\ntry:\n    result = _split_into_blocks\\(text, Path\\('/tmp/test'\\)\\)\n    print\\(f'Found \\{len\\(result\\)\\} hosts'\\)\nexcept Exception as e:\n    print\\(f'Error: \\{e\\}'\\)\n\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^source \\.venv/bin/activate && python -m pytest tests/ -x -q --tb=short 2>&1 \\| tail -60$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^source \\.venv/bin/activate && python -m pytest tests/ -x -q --tb=short 2>&1 \\| tail -70$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^source \\.venv/bin/activate && python -m pytest tests/ -v --tb=short 2>&1 \\| tail -80$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^source \\.venv/bin/activate && python -m pytest tests/ --cov=backend --cov=cli --cov=tui --cov-report=term-missing --cov-branch -q 2>&1 \\| tail -40$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "awk": true,
+        "/^source \\.venv/bin/activate && python -m pytest tests/ --cov=backend --cov=cli --cov=tui --cov-report=term-missing --cov-branch -q 2>&1 \\| tail -50$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python -m pytest tests/test_backend/test_ssh_config\\.py::TestSplitIntoBlocksMalformed -v --tb=short 2>&1 \\| tail -20$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python -m pytest tests/test_backend/test_ssh_config\\.py::TestSplitIntoBlocksMalformed -v --tb=long --no-cov 2>&1 \\| tail -30$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python -m pytest tests/test_cli\\.py::TestTUILaunch::test_no_subcommand_launches_tui_quit -v --tb=long --no-cov 2>&1 \\| tail -30$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python -m pytest tests/test_tui\\.py::TestRowSelectedHostNotFound -v --tb=short --no-cov 2>&1 \\| tail -20$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python -m pytest tests/ --cov=backend --cov=cli --cov=tui --cov-report=term-missing --cov-branch -q 2>&1 \\| tail -35$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python -m pytest tests/ -q 2>&1 \\| tail -10$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python -m pytest tests/ -q --tb=line 2>&1 \\| tail -20$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^source \\.venv/bin/activate && python -m pytest tests/ -q --tb=line 2>&1 \\| tail -30$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

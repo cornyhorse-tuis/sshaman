@@ -1,0 +1,103 @@
+name: Nightly
+
+on:
+  schedule:
+    # Run every day at 02:00 UTC
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  test-latest:
+    name: Test with latest deps (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          # No cache — always fetch latest versions of all deps
+
+      - name: Install dependencies (unpinned / latest)
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade \
+            click \
+            pydantic \
+            rich \
+            textual \
+            pytest \
+            pytest-cov \
+            pytest-asyncio
+
+      - name: Install package
+        run: pip install -e .
+
+      - name: Run tests
+        run: pytest
+
+  test-prerelease:
+    name: Test with Python pre-release
+    runs-on: ubuntu-latest
+    continue-on-error: true   # pre-release failures are informational only
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python (latest pre-release)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14-dev"
+          allow-prereleases: true
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install package
+        run: pip install -e .
+
+      - name: Run tests
+        run: pytest
+
+  notify-on-failure:
+    name: Create issue on failure
+    runs-on: ubuntu-latest
+    needs: [test-latest]
+    if: failure() && github.event_name == 'schedule'
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Open issue for nightly failure
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const today = new Date().toISOString().split('T')[0];
+            const title = `Nightly build failed – ${today}`;
+            const body = `The [nightly workflow](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) failed.\n\nPlease investigate potential compatibility issues with the latest dependency versions.`;
+
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: ['nightly-failure'],
+            });
+
+            if (!existing.data.some(i => i.title === title)) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['nightly-failure'],
+              });
+            }
