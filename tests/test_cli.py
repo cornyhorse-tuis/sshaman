@@ -7,7 +7,9 @@ never the real ~/.ssh directory.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 from click.testing import CliRunner
@@ -414,14 +416,211 @@ class TestMigrateCommand:
         result3 = invoke(runner, ssh_dir, "migrate", "--source", str(legacy_config_dir), "--config-file", "mig", "--force")
         assert result3.exit_code == 0
 
-#     assert 'Group created' in result.output  # Replace with expected success message
-#
-# # Test for add-server command
-# def test_add_server(runner):
-#     group_path = 'test_group'
-#     alias = 'test_alias'
-#     host = 'test_host'
-#     result = runner.invoke(cli, ['add-server', group_path, alias, host, '--port', '22'])
-#     assert result.exit_code == 0
-#     assert 'Server added' in result.output  # Replace with expected success message
+
+# ---------------------------------------------------------------------------
+# No-subcommand → TUI launch (previously uncovered lines 46-58)
+# ---------------------------------------------------------------------------
+
+class TestTUILaunch:
+    def test_no_subcommand_launches_tui_quit(self, runner, ssh_dir, monkeypatch):
+        """Invoking sshaman with no subcommand launches the TUI; user quits."""
+        mock_app = MagicMock()
+        mock_app.run.return_value = None
+        monkeypatch.setattr(
+            "tui.app.SSHaManApp", lambda **kw: mock_app
+        )
+        result = runner.invoke(cli, ["--ssh-dir", str(ssh_dir)], catch_exceptions=False)
+        assert result.exit_code == 0
+        mock_app.run.assert_called_once()
+
+    def test_no_subcommand_tui_ssh_action(self, runner, populated_ssh_dir, monkeypatch):
+        """TUI returns an ssh action → os.execvp is called."""
+        mock_app = MagicMock()
+        mock_app.run.return_value = ("ssh", "web-server")
+        monkeypatch.setattr(
+            "tui.app.SSHaManApp", lambda **kw: mock_app
+        )
+
+        execvp_calls: list[tuple] = []
+        monkeypatch.setattr(os, "execvp", lambda cmd, args: execvp_calls.append((cmd, args)))
+
+        result = runner.invoke(
+            cli, ["--ssh-dir", str(populated_ssh_dir)], catch_exceptions=False
+        )
+        assert result.exit_code == 0
+        assert len(execvp_calls) == 1
+        assert execvp_calls[0][0] == "ssh"
+
+    def test_no_subcommand_tui_sftp_action(self, runner, populated_ssh_dir, monkeypatch):
+        """TUI returns an sftp action → os.execvp is called with sftp."""
+        mock_app = MagicMock()
+        mock_app.run.return_value = ("sftp", "web-server")
+        monkeypatch.setattr(
+            "tui.app.SSHaManApp", lambda **kw: mock_app
+        )
+
+        execvp_calls: list[tuple] = []
+        monkeypatch.setattr(os, "execvp", lambda cmd, args: execvp_calls.append((cmd, args)))
+
+        result = runner.invoke(
+            cli, ["--ssh-dir", str(populated_ssh_dir)], catch_exceptions=False
+        )
+        assert result.exit_code == 0
+        assert len(execvp_calls) == 1
+        assert execvp_calls[0][0] == "sftp"
+
+    def test_no_subcommand_tui_unknown_action(self, runner, ssh_dir, monkeypatch):
+        """TUI returns an unrecognised action → no execvp, clean exit."""
+        mock_app = MagicMock()
+        mock_app.run.return_value = ("unknown", "some-host")
+        monkeypatch.setattr(
+            "tui.app.SSHaManApp", lambda **kw: mock_app
+        )
+
+        execvp_calls: list[tuple] = []
+        monkeypatch.setattr(os, "execvp", lambda cmd, args: execvp_calls.append((cmd, args)))
+
+        result = runner.invoke(
+            cli, ["--ssh-dir", str(ssh_dir)], catch_exceptions=False
+        )
+        assert result.exit_code == 0
+        assert len(execvp_calls) == 0
+
+
+# ---------------------------------------------------------------------------
+# show — all output fields
+# ---------------------------------------------------------------------------
+
+class TestShowAllFields:
+    def test_show_local_forwards_and_extras(self, runner, ssh_dir):
+        """show command renders LocalForward and extra_options."""
+        from backend.host_entry import HostEntry
+
+        mgr = SSHManager(ssh_dir=ssh_dir)
+        mgr.add_host(
+            HostEntry(
+                name="full-host",
+                hostname="1.2.3.4",
+                user="admin",
+                port=2222,
+                proxy_jump="bastion",
+                forward_agent=True,
+                local_forwards=["8080:localhost:80"],
+                extra_options={"serveraliveinterval": "60"},
+            ),
+            config_file="test",
+        )
+        result = invoke(runner, ssh_dir, "show", "full-host")
+        assert result.exit_code == 0
+        assert "LocalForward" in result.output
+        assert "8080:localhost:80" in result.output
+        assert "Serveraliveinterval" in result.output
+        assert "60" in result.output
+
+
+# ---------------------------------------------------------------------------
+# migrate — error output
+# ---------------------------------------------------------------------------
+
+class TestMigrateErrors:
+    def test_migrate_shows_conversion_errors(self, runner, ssh_dir, tmp_path):
+        """Broken JSON files should produce error output in migration."""
+        legacy = tmp_path / "legacy"
+        legacy.mkdir()
+        # A JSON file missing the required 'alias' key
+        (legacy / "broken.json").write_text(
+            '{"host": "1.2.3.4", "port": 22}',
+            encoding="utf-8",
+        )
+        result = invoke(runner, ssh_dir, "migrate", "--source", str(legacy))
+        assert result.exit_code == 0
+        # Error marker should be in output
+        assert "✗" in result.output or "broken" in result.output.lower()
+
+
+# ---------------------------------------------------------------------------
+# Integration tests — full workflows
+# ---------------------------------------------------------------------------
+
+class TestHostLifecycleCLI:
+    """End-to-end: add → list → show → edit → remove."""
+
+    def test_full_lifecycle(self, runner, ssh_dir):
+        # Add
+        r = invoke(runner, ssh_dir, "add", "web1", "--hostname", "10.0.0.1",
+                    "--user", "deploy", "--port", "22")
+        assert r.exit_code == 0
+
+        # List
+        r = invoke(runner, ssh_dir, "list")
+        assert "web1" in r.output
+
+        # Show
+        r = invoke(runner, ssh_dir, "show", "web1")
+        assert "10.0.0.1" in r.output
+        assert "deploy" in r.output
+
+        # Edit
+        r = invoke(runner, ssh_dir, "edit", "web1", "--hostname", "10.0.0.2")
+        assert r.exit_code == 0
+
+        # Verify edit
+        r = invoke(runner, ssh_dir, "show", "web1")
+        assert "10.0.0.2" in r.output
+
+        # Remove
+        r = invoke(runner, ssh_dir, "remove", "web1", "--yes")
+        assert r.exit_code == 0
+
+        # Verify removed
+        r = invoke(runner, ssh_dir, "list")
+        assert "web1" not in r.output
+
+
+class TestConfigLifecycleCLI:
+    """End-to-end: init → config create → list → show → delete."""
+
+    def test_full_lifecycle(self, runner, tmp_path):
+        bare_ssh = tmp_path / ".ssh"
+
+        # Init
+        r = invoke(runner, bare_ssh, "config", "init")
+        assert r.exit_code == 0
+
+        # Create
+        r = invoke(runner, bare_ssh, "config", "create", "my-servers")
+        assert r.exit_code == 0
+
+        # List
+        r = invoke(runner, bare_ssh, "config", "list")
+        assert "my-servers" in r.output
+
+        # Show
+        r = invoke(runner, bare_ssh, "config", "show", "my-servers")
+        assert r.exit_code == 0
+
+        # Delete
+        r = invoke(runner, bare_ssh, "config", "delete", "my-servers", "--yes")
+        assert r.exit_code == 0
+
+
+class TestMigrationLifecycleCLI:
+    """End-to-end: dry-run → live → force re-run."""
+
+    def test_full_lifecycle(self, runner, ssh_dir, legacy_config_dir):
+        # Dry run
+        r = invoke(runner, ssh_dir, "migrate", "--source", str(legacy_config_dir),
+                    "--dry-run")
+        assert "dry run" in r.output.lower()
+        assert "Would write" in r.output
+
+        # Live run
+        r = invoke(runner, ssh_dir, "migrate", "--source", str(legacy_config_dir),
+                    "--config-file", "mig-live")
+        assert r.exit_code == 0
+
+        # Force re-run
+        r = invoke(runner, ssh_dir, "migrate", "--source", str(legacy_config_dir),
+                    "--config-file", "mig-live", "--force")
+        assert r.exit_code == 0
 

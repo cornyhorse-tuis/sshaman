@@ -40,6 +40,47 @@
         "/^source \\.venv/bin/activate && python -m pytest tests/ -v --tb=short 2>&1 \\| tail -80$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^source \\.venv/bin/activate && python -m pytest tests/ --cov=backend --cov=cli --cov=tui --cov-report=term-missing --cov-branch -q 2>&1 \\| tail -40$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "awk": true,
+        "/^source \\.venv/bin/activate && python -m pytest tests/ --cov=backend --cov=cli --cov=tui --cov-report=term-missing --cov-branch -q 2>&1 \\| tail -50$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python -m pytest tests/test_backend/test_ssh_config\\.py::TestSplitIntoBlocksMalformed -v --tb=short 2>&1 \\| tail -20$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python -m pytest tests/test_backend/test_ssh_config\\.py::TestSplitIntoBlocksMalformed -v --tb=long --no-cov 2>&1 \\| tail -30$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python -m pytest tests/test_cli\\.py::TestTUILaunch::test_no_subcommand_launches_tui_quit -v --tb=long --no-cov 2>&1 \\| tail -30$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python -m pytest tests/test_tui\\.py::TestRowSelectedHostNotFound -v --tb=short --no-cov 2>&1 \\| tail -20$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python -m pytest tests/ --cov=backend --cov=cli --cov=tui --cov-report=term-missing --cov-branch -q 2>&1 \\| tail -35$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python -m pytest tests/ -q 2>&1 \\| tail -10$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python -m pytest tests/ -q --tb=line 2>&1 \\| tail -20$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^source \\.venv/bin/activate && python -m pytest tests/ -q --tb=line 2>&1 \\| tail -30$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

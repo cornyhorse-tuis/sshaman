@@ -468,3 +468,63 @@ class TestRemoveBlockFromText:
         text = "Host only\n    HostName h\n"
         result = _remove_block_from_text(text, "only")
         assert "Host only" not in result
+
+
+# ---------------------------------------------------------------------------
+# _safe_write — exception cleanup
+# ---------------------------------------------------------------------------
+
+class TestSafeWriteExceptionHandling:
+    """Test that _safe_write cleans up temp files on failure."""
+
+    def test_safe_write_removes_temp_on_failure(self, config_manager: SSHConfigManager):
+        """When the rename step fails, the temp file should be cleaned up."""
+        entry = HostEntry(name="boom", hostname="1.2.3.4")
+
+        original_replace = Path.replace
+
+        def failing_replace(self, target):
+            raise OSError("simulated disk error")
+
+        # Monkeypatch Path.replace to fail
+        Path.replace = failing_replace  # type: ignore[assignment]
+        try:
+            with pytest.raises(OSError, match="simulated disk error"):
+                config_manager.write_host(entry, "test-file")
+        finally:
+            Path.replace = original_replace  # type: ignore[assignment]
+
+        # No stale .tmp files should remain in config.d
+        tmp_files = list(config_manager.config_d.glob("*.tmp"))
+        assert tmp_files == []
+
+
+# ---------------------------------------------------------------------------
+# _split_into_blocks — malformed blocks
+# ---------------------------------------------------------------------------
+
+class TestSplitIntoBlocksMalformed:
+    """Test that _split_into_blocks gracefully skips malformed Host blocks."""
+
+    def test_malformed_host_block_skipped(self, tmp_path: Path):
+        """A Host block with no alias should be silently skipped."""
+        config_file = tmp_path / "bad-config"
+        # "Host" with no alias triggers ValueError in from_ssh_config_block
+        config_file.write_text(
+            "Host good-host\n"
+            "    HostName 1.2.3.4\n"
+            "    User admin\n"
+            "\n"
+            "Host\n"
+            "    HostName 9.9.9.9\n"
+            "\n"
+            "Host also-good\n"
+            "    HostName 5.6.7.8\n"
+            "\n",
+            encoding="utf-8",
+        )
+        entries = _split_into_blocks(config_file.read_text(), source_file=config_file)
+        names = [e.name for e in entries]
+        assert "good-host" in names
+        assert "also-good" in names
+        assert len(entries) == 2

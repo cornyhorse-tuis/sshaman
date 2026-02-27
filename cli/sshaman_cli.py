@@ -109,7 +109,6 @@ def show(ctx: click.Context, host: str) -> None:
     if entry is None:
         err_console.print(f"Host not found: {host!r}")
         ctx.exit(1)
-        return
 
     lines = [
         f"[bold]Host:[/bold]         {entry.name}",
@@ -363,7 +362,6 @@ def config_show(ctx: click.Context, name: str) -> None:
     if name not in files:
         err_console.print(f"Config file not found: {name!r}")
         ctx.exit(1)
-        return
     content = files[name].read_text(encoding="utf-8")
     console.print(Panel(content, title=name))
 
@@ -418,7 +416,6 @@ def migrate(
     except SSHConfigError as exc:
         err_console.print(str(exc))
         ctx.exit(1)
-        return
 
     status = "[yellow](dry run)[/yellow]" if dry_run else ""
     console.print(f"\nSSHaMan Migration {status}")

@@ -123,6 +123,18 @@ class TestConvertJsonToHostEntry:
         entry, _ = convert_json_to_host_entry(json_path, data, tmp_path)
         assert entry.comment is not None
 
+    def test_comment_fallback_when_path_not_relative(self, tmp_path: Path):
+        """When json_path is not under source_root, use fallback comment."""
+        unrelated_dir = tmp_path / "unrelated"
+        unrelated_dir.mkdir()
+        json_path = unrelated_dir / "vm1.json"
+        source_root = tmp_path / "completely" / "different"
+        source_root.mkdir(parents=True)
+        data = self._base_data()
+        entry, _ = convert_json_to_host_entry(json_path, data, source_root)
+        assert entry.comment is not None
+        assert "Migrated by SSHaMan" in entry.comment
+
     def test_raises_on_missing_alias(self, tmp_path: Path):
         data = {"host": "1.2.3.4", "port": 22}
         with pytest.raises(KeyError):
@@ -274,3 +286,28 @@ class TestMigrateLive:
         mgr = SSHConfigManager(ssh_dir=ssh_dir)
         result = migrate(source=legacy_config_dir, config_manager=mgr, dry_run=True)
         assert result.source_cleanup_reminder == ""
+
+    def test_force_overwrites_existing_target(self, legacy_config_dir: Path, ssh_dir: Path):
+        """force=True allows re-running migration to an existing target file."""
+        mgr = SSHConfigManager(ssh_dir=ssh_dir)
+        # First migration creates the target file
+        result1 = migrate(
+            source=legacy_config_dir, config_manager=mgr, config_file="target"
+        )
+        assert len(result1.migrated) > 0
+
+        # Second migration without force should fail
+        with pytest.raises(SSHConfigError, match="already exists"):
+            migrate(
+                source=legacy_config_dir, config_manager=mgr, config_file="target"
+            )
+
+        # With force=True it should succeed
+        result2 = migrate(
+            source=legacy_config_dir,
+            config_manager=mgr,
+            config_file="target",
+            force=True,
+        )
+        assert len(result2.migrated) > 0
+        assert not result2.errors
