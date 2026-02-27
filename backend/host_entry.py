@@ -207,9 +207,7 @@ class HostEntry(BaseModel):
                 stripped = line.strip()
                 lower = stripped.lower()
                 if not lower.startswith("host ") and lower != "host":
-                    raise ValueError(
-                        f"Expected 'Host <name>' line, got: {line!r}"
-                    )
+                    raise ValueError(f"Expected 'Host <name>' line, got: {line!r}")
                 host_name = stripped[5:].strip()  # everything after "Host "
                 host_line_found = True
                 continue

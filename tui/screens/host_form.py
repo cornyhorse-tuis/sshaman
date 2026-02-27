@@ -81,7 +81,11 @@ class HostFormScreen(ModalScreen[HostEntry | None]):
         """Build the form."""
         h = self._host
         with Vertical():
-            yield Label("[bold]Add Host[/bold]" if h is None else f"[bold]Edit Host: {h.name}[/bold]")
+            yield Label(
+                "[bold]Add Host[/bold]"
+                if h is None
+                else f"[bold]Edit Host: {h.name}[/bold]"
+            )
 
             yield Label("Host alias:")
             yield Input(

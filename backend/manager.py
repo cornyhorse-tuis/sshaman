@@ -62,7 +62,8 @@ class SSHManager:
 
         q = filter.lower()
         return [
-            h for h in hosts
+            h
+            for h in hosts
             if q in h.name.lower()
             or q in h.hostname.lower()
             or (h.user and q in h.user.lower())

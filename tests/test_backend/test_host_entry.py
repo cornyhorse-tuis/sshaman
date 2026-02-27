@@ -14,6 +14,7 @@ from backend.host_entry import HostEntry
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def minimal_entry(**kwargs) -> HostEntry:
     """Return a minimal valid HostEntry, merging any overrides."""
     defaults = {"name": "my-server", "hostname": "192.168.1.1"}
@@ -24,6 +25,7 @@ def minimal_entry(**kwargs) -> HostEntry:
 # ---------------------------------------------------------------------------
 # Construction / validation
 # ---------------------------------------------------------------------------
+
 
 class TestHostEntryConstruction:
     def test_minimal_fields(self):
@@ -62,8 +64,9 @@ class TestHostEntryConstruction:
 
     def test_extra_options_keys_lowercased(self):
         entry = HostEntry(
-            name="s", hostname="h",
-            extra_options={"UseKeychain": "yes", "IgnoreUnknown": "UseKeychain"}
+            name="s",
+            hostname="h",
+            extra_options={"UseKeychain": "yes", "IgnoreUnknown": "UseKeychain"},
         )
         assert "usekeychain" in entry.extra_options
         assert "ignoreunknown" in entry.extra_options
@@ -135,6 +138,7 @@ class TestHostEntryConstruction:
 # to_ssh_config serialisation
 # ---------------------------------------------------------------------------
 
+
 class TestToSshConfig:
     def test_minimal_serialisation(self):
         entry = HostEntry(name="srv", hostname="10.0.0.1")
@@ -178,7 +182,9 @@ class TestToSshConfig:
         assert "    LocalForward 8080 localhost:80" in entry.to_ssh_config()
 
     def test_multiple_local_forwards(self):
-        entry = HostEntry(name="s", hostname="h", local_forwards=["8080 h:80", "9090 h:90"])
+        entry = HostEntry(
+            name="s", hostname="h", local_forwards=["8080 h:80", "9090 h:90"]
+        )
         text = entry.to_ssh_config()
         assert "    LocalForward 8080 h:80" in text
         assert "    LocalForward 9090 h:90" in text
@@ -189,8 +195,9 @@ class TestToSshConfig:
 
     def test_extra_options_included(self):
         entry = HostEntry(
-            name="s", hostname="h",
-            extra_options={"usekeychain": "yes", "ignoreunknown": "UseKeychain"}
+            name="s",
+            hostname="h",
+            extra_options={"usekeychain": "yes", "ignoreunknown": "UseKeychain"},
         )
         text = entry.to_ssh_config()
         assert "Usekeychain yes" in text
@@ -220,6 +227,7 @@ class TestToSshConfig:
 # ---------------------------------------------------------------------------
 # from_ssh_config_block parsing
 # ---------------------------------------------------------------------------
+
 
 class TestFromSshConfigBlock:
     def test_minimal_block(self):
@@ -350,6 +358,7 @@ class TestFromSshConfigBlock:
 # ---------------------------------------------------------------------------
 # Round-trip
 # ---------------------------------------------------------------------------
+
 
 class TestRoundTrip:
     def test_minimal_round_trip(self):

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-from pathlib import Path
 
 from textual.app import ComposeResult
 from textual.containers import Vertical
@@ -80,7 +79,8 @@ class ConfigFilesScreen(ModalScreen[None]):
 
         for path in files:
             count = sum(
-                1 for h in all_hosts
+                1
+                for h in all_hosts
                 if h.source_file and h.source_file.name == path.name
             )
             table.add_row(path.name, str(count), key=path.name)

@@ -19,6 +19,7 @@ from backend.ssh_config import SSHConfigError
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def entry(name: str, hostname: str = "10.0.0.1", **kw) -> HostEntry:
     return HostEntry(name=name, hostname=hostname, **kw)
 
@@ -26,6 +27,7 @@ def entry(name: str, hostname: str = "10.0.0.1", **kw) -> HostEntry:
 # ---------------------------------------------------------------------------
 # list_hosts
 # ---------------------------------------------------------------------------
+
 
 class TestListHosts:
     def test_returns_all_hosts(self, manager: SSHManager):
@@ -70,6 +72,7 @@ class TestListHosts:
 # get_host
 # ---------------------------------------------------------------------------
 
+
 class TestGetHost:
     def test_returns_host_by_name(self, manager: SSHManager):
         host = manager.get_host("web-server")
@@ -90,13 +93,16 @@ class TestGetHost:
 # add_host
 # ---------------------------------------------------------------------------
 
+
 class TestAddHost:
     def test_adds_host_to_default_file(self, empty_manager: SSHManager, ssh_dir: Path):
         new = entry("newbie", "10.99.0.1")
         empty_manager.add_host(new)
         assert empty_manager.get_host("newbie") is not None
 
-    def test_adds_host_to_specified_file(self, empty_manager: SSHManager, ssh_dir: Path):
+    def test_adds_host_to_specified_file(
+        self, empty_manager: SSHManager, ssh_dir: Path
+    ):
         new = entry("srv", "10.0.0.5")
         empty_manager.add_host(new, config_file="my-hosts")
         path = ssh_dir / "config.d" / "my-hosts"
@@ -119,6 +125,7 @@ class TestAddHost:
 # ---------------------------------------------------------------------------
 # edit_host
 # ---------------------------------------------------------------------------
+
 
 class TestEditHost:
     def test_updates_hostname(self, manager: SSHManager):
@@ -149,6 +156,7 @@ class TestEditHost:
 # remove_host
 # ---------------------------------------------------------------------------
 
+
 class TestRemoveHost:
     def test_removes_host(self, manager: SSHManager):
         manager.remove_host("jump-box")
@@ -167,6 +175,7 @@ class TestRemoveHost:
 # ---------------------------------------------------------------------------
 # connect_command / sftp_command
 # ---------------------------------------------------------------------------
+
 
 class TestConnectCommand:
     def test_returns_ssh_alias_list(self, manager: SSHManager):
@@ -191,6 +200,7 @@ class TestSftpCommand:
 # ---------------------------------------------------------------------------
 # Config file management
 # ---------------------------------------------------------------------------
+
 
 class TestListConfigFiles:
     def test_returns_correct_files(self, manager: SSHManager, sample_ssh_dir: Path):
@@ -226,6 +236,7 @@ class TestDeleteConfigFile:
 # ---------------------------------------------------------------------------
 # ensure_setup
 # ---------------------------------------------------------------------------
+
 
 class TestEnsureSetup:
     def test_idempotent(self, manager: SSHManager):

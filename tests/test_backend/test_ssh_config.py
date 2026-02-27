@@ -22,6 +22,7 @@ from backend.ssh_config import (
 # _validate_config_file_name
 # ---------------------------------------------------------------------------
 
+
 class TestValidateConfigFileName:
     def test_valid_name_returns_path(self, tmp_path):
         config_d = tmp_path / "config.d"
@@ -54,6 +55,7 @@ class TestValidateConfigFileName:
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def make_entry(name: str = "srv", hostname: str = "10.0.0.1", **kw) -> HostEntry:
     return HostEntry(name=name, hostname=hostname, **kw)
 
@@ -69,6 +71,7 @@ def permissions(path: Path) -> int:
 # ---------------------------------------------------------------------------
 # ensure_config_d_setup
 # ---------------------------------------------------------------------------
+
 
 class TestEnsureConfigDSetup:
     def test_backup_created_when_config_has_content(self, tmp_path):
@@ -164,6 +167,7 @@ class TestEnsureConfigDSetup:
 # list_config_files
 # ---------------------------------------------------------------------------
 
+
 class TestListConfigFiles:
     def test_returns_sorted_list(self, sample_ssh_dir):
         mgr = SSHConfigManager(ssh_dir=sample_ssh_dir)
@@ -189,6 +193,7 @@ class TestListConfigFiles:
 # ---------------------------------------------------------------------------
 # create_config_file
 # ---------------------------------------------------------------------------
+
 
 class TestCreateConfigFile:
     def test_creates_file(self, ssh_dir):
@@ -232,6 +237,7 @@ class TestCreateConfigFile:
 # delete_config_file
 # ---------------------------------------------------------------------------
 
+
 class TestDeleteConfigFile:
     def test_deletes_existing_file(self, sample_ssh_dir):
         mgr = SSHConfigManager(ssh_dir=sample_ssh_dir)
@@ -257,6 +263,7 @@ class TestDeleteConfigFile:
 # ---------------------------------------------------------------------------
 # read_hosts_from_file
 # ---------------------------------------------------------------------------
+
 
 class TestReadHostsFromFile:
     def test_reads_two_hosts(self, sample_ssh_dir):
@@ -294,6 +301,7 @@ class TestReadHostsFromFile:
 # read_all_hosts
 # ---------------------------------------------------------------------------
 
+
 class TestReadAllHosts:
     def test_reads_all_hosts_across_files(self, sample_ssh_dir):
         mgr = SSHConfigManager(ssh_dir=sample_ssh_dir)
@@ -311,6 +319,7 @@ class TestReadAllHosts:
 # ---------------------------------------------------------------------------
 # write_host
 # ---------------------------------------------------------------------------
+
 
 class TestWriteHost:
     def test_appends_host_to_existing_file(self, sample_ssh_dir):
@@ -347,6 +356,7 @@ class TestWriteHost:
 # remove_host
 # ---------------------------------------------------------------------------
 
+
 class TestRemoveHost:
     def test_removes_host_from_file(self, sample_ssh_dir):
         mgr = SSHConfigManager(ssh_dir=sample_ssh_dir)
@@ -378,6 +388,7 @@ class TestRemoveHost:
 # update_host
 # ---------------------------------------------------------------------------
 
+
 class TestUpdateHost:
     def test_updates_hostname(self, sample_ssh_dir):
         mgr = SSHConfigManager(ssh_dir=sample_ssh_dir)
@@ -403,6 +414,7 @@ class TestUpdateHost:
 # ---------------------------------------------------------------------------
 # _split_into_blocks (parsing helper)
 # ---------------------------------------------------------------------------
+
 
 class TestSplitIntoBlocks:
     def test_skips_wildcard_host(self, ssh_dir):
@@ -434,10 +446,7 @@ class TestSplitIntoBlocks:
         assert blocks[0].comment == "# My host"
 
     def test_multiple_blocks(self, ssh_dir):
-        text = (
-            "Host a\n    HostName 1.1.1.1\n\n"
-            "Host b\n    HostName 2.2.2.2\n\n"
-        )
+        text = "Host a\n    HostName 1.1.1.1\n\nHost b\n    HostName 2.2.2.2\n\n"
         blocks = _split_into_blocks(text, ssh_dir)
         assert len(blocks) == 2
 
@@ -445,6 +454,7 @@ class TestSplitIntoBlocks:
 # ---------------------------------------------------------------------------
 # _remove_block_from_text (internal helper)
 # ---------------------------------------------------------------------------
+
 
 class TestRemoveBlockFromText:
     def test_removes_target_block(self):
@@ -474,6 +484,7 @@ class TestRemoveBlockFromText:
 # _safe_write — exception cleanup
 # ---------------------------------------------------------------------------
 
+
 class TestSafeWriteExceptionHandling:
     """Test that _safe_write cleans up temp files on failure."""
 
@@ -502,6 +513,7 @@ class TestSafeWriteExceptionHandling:
 # ---------------------------------------------------------------------------
 # _split_into_blocks — malformed blocks
 # ---------------------------------------------------------------------------
+
 
 class TestSplitIntoBlocksMalformed:
     """Test that _split_into_blocks gracefully skips malformed Host blocks."""

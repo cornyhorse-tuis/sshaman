@@ -103,9 +103,7 @@ class SSHConfigManager:
         """
         if not self.config_d.exists():
             return []
-        return sorted(
-            p for p in self.config_d.iterdir() if p.is_file()
-        )
+        return sorted(p for p in self.config_d.iterdir() if p.is_file())
 
     def create_config_file(self, name: str) -> Path:
         """Create a new empty file in ``config.d/`` with correct permissions.
@@ -124,9 +122,7 @@ class SSHConfigManager:
         path = _validate_config_file_name(self.config_d, name)
 
         if path.exists():
-            raise SSHConfigError(
-                f"Config file already exists: {path}"
-            )
+            raise SSHConfigError(f"Config file already exists: {path}")
 
         path.touch()
         _set_permissions(path, _FILE_MODE)
@@ -143,9 +139,7 @@ class SSHConfigManager:
         """
         path = _validate_config_file_name(self.config_d, name)
         if not path.exists():
-            raise SSHConfigError(
-                f"Config file does not exist: {path}"
-            )
+            raise SSHConfigError(f"Config file does not exist: {path}")
         path.unlink()
 
     # ------------------------------------------------------------------
@@ -288,6 +282,7 @@ class SSHConfigManager:
 # Module-level parsing helpers
 # ---------------------------------------------------------------------------
 
+
 def _set_permissions(path: Path, mode: int) -> None:
     """Set ``mode`` on ``path`` if it differs from the current permissions.
 
@@ -324,9 +319,7 @@ def _validate_config_file_name(config_d: Path, name: str) -> Path:
             f"Config file name must not contain path separators or null bytes: {name!r}"
         )
     if name in (".", ".."):
-        raise SSHConfigError(
-            f"Config file name must not be '.' or '..': {name!r}"
-        )
+        raise SSHConfigError(f"Config file name must not be '.' or '..': {name!r}")
     return config_d / name
 
 
@@ -355,7 +348,9 @@ def _split_into_blocks(text: str, source_file: Path) -> list[HostEntry]:
         if not current_block:
             return
         try:
-            entry = HostEntry.from_ssh_config_block(current_block, source_file=source_file)
+            entry = HostEntry.from_ssh_config_block(
+                current_block, source_file=source_file
+            )
             entries.append(entry)
         except ValueError:
             pass  # Malformed blocks are skipped silently

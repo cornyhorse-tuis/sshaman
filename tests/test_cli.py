@@ -6,7 +6,6 @@ never the real ~/.ssh directory.
 
 from __future__ import annotations
 
-import json
 import os
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -22,14 +21,18 @@ from cli.sshaman_cli import cli
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def invoke(runner: CliRunner, ssh_dir: Path, *args: str, input: str | None = None):
     """Invoke the CLI with --ssh-dir set to the test directory."""
-    return runner.invoke(cli, ["--ssh-dir", str(ssh_dir), *args], input=input, catch_exceptions=False)
+    return runner.invoke(
+        cli, ["--ssh-dir", str(ssh_dir), *args], input=input, catch_exceptions=False
+    )
 
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def runner() -> CliRunner:
@@ -56,6 +59,7 @@ def populated_ssh_dir(ssh_dir: Path) -> Path:
 # ---------------------------------------------------------------------------
 # list
 # ---------------------------------------------------------------------------
+
 
 class TestListCommand:
     def test_list_shows_all_hosts(self, runner, populated_ssh_dir):
@@ -90,6 +94,7 @@ class TestListCommand:
 # ---------------------------------------------------------------------------
 # show
 # ---------------------------------------------------------------------------
+
 
 class TestShowCommand:
     def test_show_existing_host(self, runner, populated_ssh_dir):
@@ -132,6 +137,7 @@ class TestShowCommand:
 # add
 # ---------------------------------------------------------------------------
 
+
 class TestAddCommand:
     def test_add_host_minimal(self, runner, ssh_dir):
         result = invoke(runner, ssh_dir, "add", "new-host", "--hostname", "192.168.1.1")
@@ -143,13 +149,20 @@ class TestAddCommand:
 
     def test_add_host_all_options(self, runner, ssh_dir):
         result = invoke(
-            runner, ssh_dir,
-            "add", "full-host",
-            "--hostname", "10.10.0.1",
-            "--user", "deploy",
-            "--port", "2222",
-            "--identity-file", "~/.ssh/deploy_key",
-            "--config-file", "custom-file",
+            runner,
+            ssh_dir,
+            "add",
+            "full-host",
+            "--hostname",
+            "10.10.0.1",
+            "--user",
+            "deploy",
+            "--port",
+            "2222",
+            "--identity-file",
+            "~/.ssh/deploy_key",
+            "--config-file",
+            "custom-file",
         )
         assert result.exit_code == 0
         mgr = SSHManager(ssh_dir=ssh_dir)
@@ -159,15 +172,21 @@ class TestAddCommand:
         assert host.port == 2222
 
     def test_add_duplicate_host_fails(self, runner, populated_ssh_dir):
-        result = invoke(runner, populated_ssh_dir, "add", "web-server", "--hostname", "10.0.0.99")
+        result = invoke(
+            runner, populated_ssh_dir, "add", "web-server", "--hostname", "10.0.0.99"
+        )
         assert result.exit_code == 1
 
     def test_add_host_custom_config_file(self, runner, ssh_dir):
         result = invoke(
-            runner, ssh_dir,
-            "add", "work-server",
-            "--hostname", "work.example.com",
-            "--config-file", "10-work-servers",
+            runner,
+            ssh_dir,
+            "add",
+            "work-server",
+            "--hostname",
+            "work.example.com",
+            "--config-file",
+            "10-work-servers",
         )
         assert result.exit_code == 0
         mgr = SSHManager(ssh_dir=ssh_dir)
@@ -181,31 +200,47 @@ class TestAddCommand:
 # edit
 # ---------------------------------------------------------------------------
 
+
 class TestEditCommand:
     def test_edit_hostname(self, runner, populated_ssh_dir):
-        result = invoke(runner, populated_ssh_dir, "edit", "web-server", "--hostname", "10.0.0.99")
+        result = invoke(
+            runner, populated_ssh_dir, "edit", "web-server", "--hostname", "10.0.0.99"
+        )
         assert result.exit_code == 0
         mgr = SSHManager(ssh_dir=populated_ssh_dir)
         assert mgr.get_host("web-server").hostname == "10.0.0.99"
 
     def test_edit_user(self, runner, populated_ssh_dir):
-        result = invoke(runner, populated_ssh_dir, "edit", "web-server", "--user", "root")
+        result = invoke(
+            runner, populated_ssh_dir, "edit", "web-server", "--user", "root"
+        )
         assert result.exit_code == 0
         mgr = SSHManager(ssh_dir=populated_ssh_dir)
         assert mgr.get_host("web-server").user == "root"
 
     def test_edit_port(self, runner, populated_ssh_dir):
-        result = invoke(runner, populated_ssh_dir, "edit", "web-server", "--port", "2222")
+        result = invoke(
+            runner, populated_ssh_dir, "edit", "web-server", "--port", "2222"
+        )
         assert result.exit_code == 0
         mgr = SSHManager(ssh_dir=populated_ssh_dir)
         assert mgr.get_host("web-server").port == 2222
 
     def test_edit_identity_file(self, runner, populated_ssh_dir):
-        result = invoke(runner, populated_ssh_dir, "edit", "web-server", "--identity-file", "~/.ssh/custom")
+        result = invoke(
+            runner,
+            populated_ssh_dir,
+            "edit",
+            "web-server",
+            "--identity-file",
+            "~/.ssh/custom",
+        )
         assert result.exit_code == 0
 
     def test_edit_nonexistent_host(self, runner, populated_ssh_dir):
-        result = invoke(runner, populated_ssh_dir, "edit", "ghost", "--hostname", "10.99.99.99")
+        result = invoke(
+            runner, populated_ssh_dir, "edit", "ghost", "--hostname", "10.99.99.99"
+        )
         assert result.exit_code == 1
 
     def test_edit_no_changes_is_noop(self, runner, populated_ssh_dir):
@@ -217,6 +252,7 @@ class TestEditCommand:
 # ---------------------------------------------------------------------------
 # remove
 # ---------------------------------------------------------------------------
+
 
 class TestRemoveCommand:
     def test_remove_with_yes_flag(self, runner, populated_ssh_dir):
@@ -233,7 +269,8 @@ class TestRemoveCommand:
 
     def test_remove_with_denied_confirmation(self, runner, populated_ssh_dir):
         result = runner.invoke(
-            cli, ["--ssh-dir", str(populated_ssh_dir), "remove", "web-server"],
+            cli,
+            ["--ssh-dir", str(populated_ssh_dir), "remove", "web-server"],
             input="n\n",
             catch_exceptions=False,
         )
@@ -251,6 +288,7 @@ class TestRemoveCommand:
 # connect / sftp (error paths only — os.execvp has pragma no cover)
 # ---------------------------------------------------------------------------
 
+
 class TestConnectCommand:
     def test_connect_nonexistent_host_fails(self, runner, populated_ssh_dir):
         result = invoke(runner, populated_ssh_dir, "connect", "ghost")
@@ -267,6 +305,7 @@ class TestSftpCommand:
 # search
 # ---------------------------------------------------------------------------
 
+
 class TestSearchCommand:
     def test_search_finds_match(self, runner, populated_ssh_dir):
         result = invoke(runner, populated_ssh_dir, "search", "web")
@@ -282,6 +321,7 @@ class TestSearchCommand:
 # ---------------------------------------------------------------------------
 # config subgroup
 # ---------------------------------------------------------------------------
+
 
 class TestConfigList:
     def test_config_list_empty(self, runner, ssh_dir):
@@ -311,7 +351,9 @@ class TestConfigCreate:
 
 class TestConfigDelete:
     def test_config_delete_with_yes(self, runner, populated_ssh_dir):
-        result = invoke(runner, populated_ssh_dir, "config", "delete", "test-hosts", "--yes")
+        result = invoke(
+            runner, populated_ssh_dir, "config", "delete", "test-hosts", "--yes"
+        )
         assert result.exit_code == 0
         mgr = SSHManager(ssh_dir=populated_ssh_dir)
         assert not any(f.name == "test-hosts" for f in mgr.list_config_files())
@@ -321,7 +363,9 @@ class TestConfigDelete:
         assert result.exit_code == 1
 
     def test_config_delete_with_confirmation(self, runner, populated_ssh_dir):
-        result = invoke(runner, populated_ssh_dir, "config", "delete", "test-hosts", input="y\n")
+        result = invoke(
+            runner, populated_ssh_dir, "config", "delete", "test-hosts", input="y\n"
+        )
         assert result.exit_code == 0
 
 
@@ -349,12 +393,15 @@ class TestConfigInit:
 # migrate
 # ---------------------------------------------------------------------------
 
+
 class TestMigrateCommand:
     def test_migrate_dry_run(self, runner, ssh_dir, legacy_config_dir):
         result = invoke(
-            runner, ssh_dir,
+            runner,
+            ssh_dir,
             "migrate",
-            "--source", str(legacy_config_dir),
+            "--source",
+            str(legacy_config_dir),
             "--dry-run",
         )
         assert result.exit_code == 0
@@ -365,10 +412,13 @@ class TestMigrateCommand:
 
     def test_migrate_live(self, runner, ssh_dir, legacy_config_dir):
         result = invoke(
-            runner, ssh_dir,
+            runner,
+            ssh_dir,
             "migrate",
-            "--source", str(legacy_config_dir),
-            "--config-file", "migrated",
+            "--source",
+            str(legacy_config_dir),
+            "--config-file",
+            "migrated",
         )
         assert result.exit_code == 0
         mgr = SSHManager(ssh_dir=ssh_dir)
@@ -379,28 +429,35 @@ class TestMigrateCommand:
         empty_dir = tmp_path / "empty_legacy"
         empty_dir.mkdir()
         result = invoke(
-            runner, ssh_dir,
+            runner,
+            ssh_dir,
             "migrate",
-            "--source", str(empty_dir),
+            "--source",
+            str(empty_dir),
         )
         assert result.exit_code == 0
         assert "Nothing" in result.output
 
     def test_migrate_nonexistent_source(self, runner, ssh_dir, tmp_path):
         result = invoke(
-            runner, ssh_dir,
+            runner,
+            ssh_dir,
             "migrate",
-            "--source", str(tmp_path / "does_not_exist"),
+            "--source",
+            str(tmp_path / "does_not_exist"),
         )
         assert result.exit_code == 0
         assert "Nothing" in result.output
 
     def test_migrate_warns_about_password(self, runner, ssh_dir, legacy_config_dir):
         result = invoke(
-            runner, ssh_dir,
+            runner,
+            ssh_dir,
             "migrate",
-            "--source", str(legacy_config_dir),
-            "--config-file", "migrated2",
+            "--source",
+            str(legacy_config_dir),
+            "--config-file",
+            "migrated2",
         )
         assert result.exit_code == 0
         # Password warning should appear in output
@@ -408,12 +465,37 @@ class TestMigrateCommand:
 
     def test_migrate_force_overwrites(self, runner, ssh_dir, legacy_config_dir):
         # First migration
-        invoke(runner, ssh_dir, "migrate", "--source", str(legacy_config_dir), "--config-file", "mig")
+        invoke(
+            runner,
+            ssh_dir,
+            "migrate",
+            "--source",
+            str(legacy_config_dir),
+            "--config-file",
+            "mig",
+        )
         # Second migration fails without --force
-        result2 = invoke(runner, ssh_dir, "migrate", "--source", str(legacy_config_dir), "--config-file", "mig")
+        result2 = invoke(
+            runner,
+            ssh_dir,
+            "migrate",
+            "--source",
+            str(legacy_config_dir),
+            "--config-file",
+            "mig",
+        )
         assert result2.exit_code == 1
         # With --force it succeeds
-        result3 = invoke(runner, ssh_dir, "migrate", "--source", str(legacy_config_dir), "--config-file", "mig", "--force")
+        result3 = invoke(
+            runner,
+            ssh_dir,
+            "migrate",
+            "--source",
+            str(legacy_config_dir),
+            "--config-file",
+            "mig",
+            "--force",
+        )
         assert result3.exit_code == 0
 
 
@@ -421,14 +503,13 @@ class TestMigrateCommand:
 # No-subcommand → TUI launch (previously uncovered lines 46-58)
 # ---------------------------------------------------------------------------
 
+
 class TestTUILaunch:
     def test_no_subcommand_launches_tui_quit(self, runner, ssh_dir, monkeypatch):
         """Invoking sshaman with no subcommand launches the TUI; user quits."""
         mock_app = MagicMock()
         mock_app.run.return_value = None
-        monkeypatch.setattr(
-            "tui.app.SSHaManApp", lambda **kw: mock_app
-        )
+        monkeypatch.setattr("tui.app.SSHaManApp", lambda **kw: mock_app)
         result = runner.invoke(cli, ["--ssh-dir", str(ssh_dir)], catch_exceptions=False)
         assert result.exit_code == 0
         mock_app.run.assert_called_once()
@@ -437,12 +518,12 @@ class TestTUILaunch:
         """TUI returns an ssh action → os.execvp is called."""
         mock_app = MagicMock()
         mock_app.run.return_value = ("ssh", "web-server")
-        monkeypatch.setattr(
-            "tui.app.SSHaManApp", lambda **kw: mock_app
-        )
+        monkeypatch.setattr("tui.app.SSHaManApp", lambda **kw: mock_app)
 
         execvp_calls: list[tuple] = []
-        monkeypatch.setattr(os, "execvp", lambda cmd, args: execvp_calls.append((cmd, args)))
+        monkeypatch.setattr(
+            os, "execvp", lambda cmd, args: execvp_calls.append((cmd, args))
+        )
 
         result = runner.invoke(
             cli, ["--ssh-dir", str(populated_ssh_dir)], catch_exceptions=False
@@ -451,16 +532,18 @@ class TestTUILaunch:
         assert len(execvp_calls) == 1
         assert execvp_calls[0][0] == "ssh"
 
-    def test_no_subcommand_tui_sftp_action(self, runner, populated_ssh_dir, monkeypatch):
+    def test_no_subcommand_tui_sftp_action(
+        self, runner, populated_ssh_dir, monkeypatch
+    ):
         """TUI returns an sftp action → os.execvp is called with sftp."""
         mock_app = MagicMock()
         mock_app.run.return_value = ("sftp", "web-server")
-        monkeypatch.setattr(
-            "tui.app.SSHaManApp", lambda **kw: mock_app
-        )
+        monkeypatch.setattr("tui.app.SSHaManApp", lambda **kw: mock_app)
 
         execvp_calls: list[tuple] = []
-        monkeypatch.setattr(os, "execvp", lambda cmd, args: execvp_calls.append((cmd, args)))
+        monkeypatch.setattr(
+            os, "execvp", lambda cmd, args: execvp_calls.append((cmd, args))
+        )
 
         result = runner.invoke(
             cli, ["--ssh-dir", str(populated_ssh_dir)], catch_exceptions=False
@@ -473,16 +556,14 @@ class TestTUILaunch:
         """TUI returns an unrecognised action → no execvp, clean exit."""
         mock_app = MagicMock()
         mock_app.run.return_value = ("unknown", "some-host")
-        monkeypatch.setattr(
-            "tui.app.SSHaManApp", lambda **kw: mock_app
-        )
+        monkeypatch.setattr("tui.app.SSHaManApp", lambda **kw: mock_app)
 
         execvp_calls: list[tuple] = []
-        monkeypatch.setattr(os, "execvp", lambda cmd, args: execvp_calls.append((cmd, args)))
-
-        result = runner.invoke(
-            cli, ["--ssh-dir", str(ssh_dir)], catch_exceptions=False
+        monkeypatch.setattr(
+            os, "execvp", lambda cmd, args: execvp_calls.append((cmd, args))
         )
+
+        result = runner.invoke(cli, ["--ssh-dir", str(ssh_dir)], catch_exceptions=False)
         assert result.exit_code == 0
         assert len(execvp_calls) == 0
 
@@ -490,6 +571,7 @@ class TestTUILaunch:
 # ---------------------------------------------------------------------------
 # show — all output fields
 # ---------------------------------------------------------------------------
+
 
 class TestShowAllFields:
     def test_show_local_forwards_and_extras(self, runner, ssh_dir):
@@ -522,6 +604,7 @@ class TestShowAllFields:
 # migrate — error output
 # ---------------------------------------------------------------------------
 
+
 class TestMigrateErrors:
     def test_migrate_shows_conversion_errors(self, runner, ssh_dir, tmp_path):
         """Broken JSON files should produce error output in migration."""
@@ -542,13 +625,24 @@ class TestMigrateErrors:
 # Integration tests — full workflows
 # ---------------------------------------------------------------------------
 
+
 class TestHostLifecycleCLI:
     """End-to-end: add → list → show → edit → remove."""
 
     def test_full_lifecycle(self, runner, ssh_dir):
         # Add
-        r = invoke(runner, ssh_dir, "add", "web1", "--hostname", "10.0.0.1",
-                    "--user", "deploy", "--port", "22")
+        r = invoke(
+            runner,
+            ssh_dir,
+            "add",
+            "web1",
+            "--hostname",
+            "10.0.0.1",
+            "--user",
+            "deploy",
+            "--port",
+            "22",
+        )
         assert r.exit_code == 0
 
         # List
@@ -609,18 +703,33 @@ class TestMigrationLifecycleCLI:
 
     def test_full_lifecycle(self, runner, ssh_dir, legacy_config_dir):
         # Dry run
-        r = invoke(runner, ssh_dir, "migrate", "--source", str(legacy_config_dir),
-                    "--dry-run")
+        r = invoke(
+            runner, ssh_dir, "migrate", "--source", str(legacy_config_dir), "--dry-run"
+        )
         assert "dry run" in r.output.lower()
         assert "Would write" in r.output
 
         # Live run
-        r = invoke(runner, ssh_dir, "migrate", "--source", str(legacy_config_dir),
-                    "--config-file", "mig-live")
+        r = invoke(
+            runner,
+            ssh_dir,
+            "migrate",
+            "--source",
+            str(legacy_config_dir),
+            "--config-file",
+            "mig-live",
+        )
         assert r.exit_code == 0
 
         # Force re-run
-        r = invoke(runner, ssh_dir, "migrate", "--source", str(legacy_config_dir),
-                    "--config-file", "mig-live", "--force")
+        r = invoke(
+            runner,
+            ssh_dir,
+            "migrate",
+            "--source",
+            str(legacy_config_dir),
+            "--config-file",
+            "mig-live",
+            "--force",
+        )
         assert r.exit_code == 0
-
