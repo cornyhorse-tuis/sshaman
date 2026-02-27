@@ -348,7 +348,7 @@ def config_create(ctx: click.Context, name: str) -> None:
     mgr: SSHManager = ctx.obj["manager"]
     try:
         path = mgr.create_config_file(name)
-        console.print(f"[green]✓[/green] Created [bold]{path}[/bold].")
+        console.print(f"[green]✓[/green] Created [bold]{path.name}[/bold].")
     except SSHConfigError as exc:
         err_console.print(str(exc))
         ctx.exit(1)
