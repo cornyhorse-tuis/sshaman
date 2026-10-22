@@ -12,7 +12,6 @@ import shutil
 import stat
 import tempfile
 from pathlib import Path
-from typing import Optional
 
 from backend.host_entry import HostEntry
 
@@ -39,7 +38,7 @@ class SSHConfigManager:
         ssh_dir: Path to the ``.ssh`` directory.  Defaults to ``~/.ssh``.
     """
 
-    def __init__(self, ssh_dir: Optional[Path] = None) -> None:
+    def __init__(self, ssh_dir: Path | None = None) -> None:
         self.ssh_dir: Path = ssh_dir or (Path.home() / ".ssh")
         self.config_file: Path = self.ssh_dir / "config"
         self.config_d: Path = self.ssh_dir / "config.d"

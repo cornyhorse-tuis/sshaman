@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
-
 
 # Directives we handle explicitly (case-insensitive keys stored lowercase).
 _KNOWN_DIRECTIVES = {
@@ -43,18 +41,18 @@ class HostEntry(BaseModel):
 
     name: str
     hostname: str
-    user: Optional[str] = None
+    user: str | None = None
     port: int = Field(default=22, ge=1, le=65535)
-    identity_file: Optional[Path] = None
-    proxy_jump: Optional[str] = None
-    forward_agent: Optional[bool] = None
+    identity_file: Path | None = None
+    proxy_jump: str | None = None
+    forward_agent: bool | None = None
     local_forwards: list[str] = Field(default_factory=list)
     remote_forwards: list[str] = Field(default_factory=list)
     extra_options: dict[str, str] = Field(default_factory=dict)
 
     # Not serialised into the SSH config text — metadata only.
-    source_file: Optional[Path] = Field(default=None, exclude=True)
-    comment: Optional[str] = None
+    source_file: Path | None = Field(default=None, exclude=True)
+    comment: str | None = None
 
     model_config = {
         "extra": "forbid",
@@ -96,7 +94,7 @@ class HostEntry(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def extra_options_keys_are_lowercase(self) -> "HostEntry":
+    def extra_options_keys_are_lowercase(self) -> HostEntry:
         """Normalise extra_options keys to lowercase."""
         # Use __dict__ to avoid triggering validate_assignment recursion.
         self.__dict__["extra_options"] = {
@@ -165,8 +163,8 @@ class HostEntry(BaseModel):
     def from_ssh_config_block(
         cls,
         block_lines: list[str],
-        source_file: Optional[Path] = None,
-    ) -> "HostEntry":
+        source_file: Path | None = None,
+    ) -> HostEntry:
         """Parse a list of lines belonging to one ``Host`` block.
 
         The first element must be the ``Host <name>`` line.  Subsequent

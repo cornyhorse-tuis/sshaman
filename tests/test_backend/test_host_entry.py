@@ -9,7 +9,6 @@ from pydantic import ValidationError
 
 from backend.host_entry import HostEntry
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

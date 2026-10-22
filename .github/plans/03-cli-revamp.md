@@ -57,34 +57,40 @@ from pathlib import Path
 from backend.manager import SSHManager
 from backend.host_entry import HostEntry
 
+
 @click.group(invoke_without_command=True)
-@click.option('--ssh-dir', type=click.Path(path_type=Path), default=None,
-              help='Override SSH directory (default: ~/.ssh)')
+@click.option(
+    "--ssh-dir",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Override SSH directory (default: ~/.ssh)",
+)
 @click.pass_context
 def cli(ctx, ssh_dir):
     """SSHaMan — SSH connection manager."""
     ctx.ensure_object(dict)
-    ctx.obj['manager'] = SSHManager(ssh_dir=ssh_dir)
+    ctx.obj["manager"] = SSHManager(ssh_dir=ssh_dir)
     if ctx.invoked_subcommand is None:
         # Launch TUI
         from tui.app import SSHaManApp
-        app = SSHaManApp(manager=ctx.obj['manager'])
+
+        app = SSHaManApp(manager=ctx.obj["manager"])
         app.run()
 
 
 @cli.command()
-@click.option('--filter', '-f', 'pattern', default=None, help='Filter hosts by pattern')
+@click.option("--filter", "-f", "pattern", default=None, help="Filter hosts by pattern")
 @click.pass_context
 def list(ctx, pattern):
     """List all SSH hosts."""
-    manager = ctx.obj['manager']
+    manager = ctx.obj["manager"]
     hosts = manager.list_hosts(filter=pattern)
     # Format and display with Rich table
     ...
 
 
 @cli.command()
-@click.argument('host')
+@click.argument("host")
 @click.pass_context
 def show(ctx, host):
     """Show detailed configuration for a host."""
@@ -92,12 +98,14 @@ def show(ctx, host):
 
 
 @cli.command()
-@click.argument('name')
-@click.option('--hostname', '-H', required=True, help='Server address')
-@click.option('--user', '-u', default=None, help='Username')
-@click.option('--port', '-p', default=22, help='Port number')
-@click.option('--identity-file', '-i', default=None, help='Path to SSH key')
-@click.option('--config-file', '-c', default='sshaman-hosts', help='Config file in config.d/')
+@click.argument("name")
+@click.option("--hostname", "-H", required=True, help="Server address")
+@click.option("--user", "-u", default=None, help="Username")
+@click.option("--port", "-p", default=22, help="Port number")
+@click.option("--identity-file", "-i", default=None, help="Path to SSH key")
+@click.option(
+    "--config-file", "-c", default="sshaman-hosts", help="Config file in config.d/"
+)
 @click.pass_context
 def add(ctx, name, hostname, user, port, identity_file, config_file):
     """Add a new SSH host."""
@@ -105,7 +113,7 @@ def add(ctx, name, hostname, user, port, identity_file, config_file):
 
 
 @cli.command()
-@click.argument('host')
+@click.argument("host")
 @click.pass_context
 def edit(ctx, host):
     """Edit an existing SSH host."""
@@ -113,8 +121,8 @@ def edit(ctx, host):
 
 
 @cli.command()
-@click.argument('host')
-@click.option('--yes', '-y', is_flag=True, help='Skip confirmation')
+@click.argument("host")
+@click.option("--yes", "-y", is_flag=True, help="Skip confirmation")
 @click.pass_context
 def remove(ctx, host):
     """Remove an SSH host."""
@@ -122,26 +130,27 @@ def remove(ctx, host):
 
 
 @cli.command()
-@click.argument('host')
+@click.argument("host")
 @click.pass_context
 def connect(ctx, host):
     """Connect to a host via SSH."""
     import os
-    manager = ctx.obj['manager']
+
+    manager = ctx.obj["manager"]
     cmd = manager.connect_command(host)
-    os.execvp('ssh', cmd.split())
+    os.execvp("ssh", cmd.split())
 
 
 @cli.command()
-@click.argument('host')
-@click.pass_context  
+@click.argument("host")
+@click.pass_context
 def sftp(ctx, host):
     """Connect to a host via SFTP."""
     ...
 
 
 @cli.command()
-@click.argument('pattern')
+@click.argument("pattern")
 @click.pass_context
 def search(ctx, pattern):
     """Search hosts by name, hostname, or user."""
@@ -154,28 +163,32 @@ def config():
     """Manage SSH config files in config.d/."""
     pass
 
-@config.command('list')
+
+@config.command("list")
 @click.pass_context
 def config_list(ctx):
     """List all config.d files."""
     ...
 
-@config.command('create')
-@click.argument('name')
+
+@config.command("create")
+@click.argument("name")
 @click.pass_context
 def config_create(ctx, name):
     """Create a new config.d file."""
     ...
 
-@config.command('delete')
-@click.argument('name')
-@click.option('--yes', '-y', is_flag=True)
+
+@config.command("delete")
+@click.argument("name")
+@click.option("--yes", "-y", is_flag=True)
 @click.pass_context
 def config_delete(ctx, name):
     """Delete a config.d file."""
     ...
 
-@config.command('init')
+
+@config.command("init")
 @click.pass_context
 def config_init(ctx):
     """Initialize config.d setup (create dir, add Include)."""

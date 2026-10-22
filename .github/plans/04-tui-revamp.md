@@ -156,6 +156,7 @@ Both CLI and TUI instantiate `SSHManager` and pass it to the TUI app. The TUI ne
 ```python
 from textual.widgets import DataTable
 
+
 class HostListScreen(Screen):
     def compose(self):
         yield Header()
@@ -174,9 +175,12 @@ class HostListScreen(Screen):
         table.clear()
         for host in hosts:
             table.add_row(
-                host.name, host.hostname, host.user or "", 
-                str(host.port), host.source_file.name if host.source_file else "",
-                key=host.name
+                host.name,
+                host.hostname,
+                host.user or "",
+                str(host.port),
+                host.source_file.name if host.source_file else "",
+                key=host.name,
             )
 ```
 
@@ -187,6 +191,7 @@ def action_connect(self):
     host = self._get_selected_host()
     if host:
         self.app.exit(result=("ssh", host.name))
+
 
 # In app.py:
 def main(manager):

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Optional
 
 import click
 from rich.console import Console
@@ -37,7 +36,7 @@ err_console = Console(stderr=True, style="bold red")
     help="Override the SSH directory (default: ~/.ssh).",
 )
 @click.pass_context
-def cli(ctx: click.Context, ssh_dir: Optional[Path]) -> None:
+def cli(ctx: click.Context, ssh_dir: Path | None) -> None:
     """SSHaMan — manage SSH connections and config files."""
     ctx.ensure_object(dict)
     ctx.obj["manager"] = SSHManager(ssh_dir=ssh_dir)
@@ -70,7 +69,7 @@ def cli(ctx: click.Context, ssh_dir: Optional[Path]) -> None:
     "--filter", "-f", "pattern", default=None, help="Filter by name, hostname, or user."
 )
 @click.pass_context
-def list_hosts(ctx: click.Context, pattern: Optional[str]) -> None:
+def list_hosts(ctx: click.Context, pattern: str | None) -> None:
     """List all SSH hosts."""
     mgr: SSHManager = ctx.obj["manager"]
     hosts = mgr.list_hosts(filter=pattern)
@@ -161,9 +160,9 @@ def add(
     ctx: click.Context,
     name: str,
     hostname: str,
-    user: Optional[str],
+    user: str | None,
     port: int,
-    identity_file: Optional[str],
+    identity_file: str | None,
     config_file: str,
 ) -> None:
     """Add a new SSH host."""
@@ -201,10 +200,10 @@ def add(
 def edit(
     ctx: click.Context,
     host: str,
-    hostname: Optional[str],
-    user: Optional[str],
-    port: Optional[int],
-    identity_file: Optional[str],
+    hostname: str | None,
+    user: str | None,
+    port: int | None,
+    identity_file: str | None,
 ) -> None:
     """Edit an existing SSH host."""
     mgr: SSHManager = ctx.obj["manager"]
@@ -421,7 +420,7 @@ def config_init(ctx: click.Context) -> None:
 @click.pass_context
 def migrate(
     ctx: click.Context,
-    source: Optional[Path],
+    source: Path | None,
     config_file: str,
     dry_run: bool,
     force: bool,

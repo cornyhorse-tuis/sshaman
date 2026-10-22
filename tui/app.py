@@ -7,8 +7,10 @@ config files directly.
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 from textual.app import App, ComposeResult
-from textual.binding import Binding
+from textual.binding import Binding, BindingType
 from textual.widgets import DataTable, Footer, Header, Input
 
 from backend.host_entry import HostEntry
@@ -47,7 +49,7 @@ class SSHaManApp(App[tuple[str, str] | None]):
     }
     """
 
-    BINDINGS = [
+    BINDINGS: ClassVar[list[BindingType]] = [
         Binding("a", "add_host", "Add", show=True),
         Binding("d", "delete_host", "Delete", show=True),
         Binding("e", "edit_host", "Edit", show=True),
@@ -107,7 +109,7 @@ class SSHaManApp(App[tuple[str, str] | None]):
         try:
             row_key, _ = table.coordinate_to_cell_key(table.cursor_coordinate)
             return str(row_key.value)
-        except Exception:
+        except Exception:  # noqa: BLE001 - any failed lookup just means "no row selected"
             return None
 
     # ------------------------------------------------------------------

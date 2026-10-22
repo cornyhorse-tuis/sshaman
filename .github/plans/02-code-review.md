@@ -33,13 +33,13 @@ The `retrieve_file()` function reads JSON config files and builds SSH commands i
 ### 6. `Server.__str__` returns `None` (`entities/server.py`)
 ```python
 def __str__(self):
-    print(f'  {self.alias} - {self.host}:{self.port}')
+    print(f"  {self.alias} - {self.host}:{self.port}")
 ```
 This **prints** instead of **returning** a string. `str(server)` returns `None`.
 
 ### 7. `action_connect_ssh` silently fails on non-JSON selection (`tui/tree.py`)
 ```python
-if '.json' not in str(path).lower():
+if ".json" not in str(path).lower():
     pass  # ← silently does nothing
 ```
 Should display a user-facing message like "Select a server, not a group."
@@ -68,22 +68,22 @@ The `sshaman_setup` fixture writes to `~/.config/test_sshaman/` — a real path 
 
 ### 12. `generate_default_config` creates group `sg1` but tests expect `subgroup1` (`tests/setup_tests.py`)
 ```python
-g1.make_child('sg1', parent_absolute_path=g1.absolute_path)
+g1.make_child("sg1", parent_absolute_path=g1.absolute_path)
 ```
 But `test_load_config` asserts:
 ```python
-correct_contents = ['subgroup1', 'vm1.json', 'vm2.json']
+correct_contents = ["subgroup1", "vm1.json", "vm2.json"]
 ```
 The group is named `sg1` but the test expects `subgroup1`. Then `sshaman_setup` also calls `smn.make_group('group1.subgroup1.subgroup2')` which creates the `subgroup1` directory, so the test may pass by accident, but the `sg1` directory is orphaned.
 
 ### 13. `vm2` is added to `sg1` but test expects it in `group1` (`tests/setup_tests.py`)
 ```python
-sg2 = g1.children['sg1']
+sg2 = g1.children["sg1"]
 sg2.add_server(s2)  # ← adds vm2 to sg1/, not group1/
 ```
 But `test_load_config` expects `vm2.json` in `group1/`:
 ```python
-correct_contents = ['subgroup1', 'vm1.json', 'vm2.json']
+correct_contents = ["subgroup1", "vm1.json", "vm2.json"]
 ```
 This suggests tests may be passing for the wrong reasons or are currently broken.
 
@@ -119,9 +119,9 @@ This serializes to JSON string then immediately parses back to dict. Should just
 
 ### 20. `NotImplementedError` raised after `raise` in `add_server` (`management/sshman.py`)
 ```python
-if kwargs.get('start_commands'):
+if kwargs.get("start_commands"):
     raise NotImplementedError("Start commands are not supported yet.")
-    kwargs['start_commands'] = list(kwargs['start_commands'])  # ← unreachable
+    kwargs["start_commands"] = list(kwargs["start_commands"])  # ← unreachable
 ```
 
 ### 21. No error handling or user feedback in CLI commands

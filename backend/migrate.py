@@ -15,10 +15,9 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 from backend.host_entry import HostEntry
-from backend.ssh_config import SSHConfigManager, SSHConfigError
+from backend.ssh_config import SSHConfigError, SSHConfigManager
 
 # Default source directory for the old SSHaMan config store.
 _DEFAULT_SOURCE = Path.home() / ".config" / "sshaman"
@@ -130,8 +129,8 @@ def convert_json_to_host_entry(
 
 
 def migrate(
-    source: Optional[Path] = None,
-    config_manager: Optional[SSHConfigManager] = None,
+    source: Path | None = None,
+    config_manager: SSHConfigManager | None = None,
     config_file: str = _DEFAULT_TARGET_FILE,
     dry_run: bool = False,
     force: bool = False,

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import re
+from typing import ClassVar
 
 from textual.app import ComposeResult
+from textual.binding import BindingType
 from textual.containers import Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, DataTable, Input, Label
@@ -18,7 +20,7 @@ class ConfigFilesScreen(ModalScreen[None]):
     Always dismisses with ``None``.
     """
 
-    BINDINGS = [
+    BINDINGS: ClassVar[list[BindingType]] = [
         ("escape", "go_back", "Back"),
         ("n", "new_file", "New"),
     ]
@@ -116,7 +118,7 @@ class ConfigFilesScreen(ModalScreen[None]):
 class NewConfigFileScreen(ModalScreen[str | None]):
     """Small dialog that asks for a new config file name."""
 
-    BINDINGS = [("escape", "cancel", "Cancel")]
+    BINDINGS: ClassVar[list[BindingType]] = [("escape", "cancel", "Cancel")]
 
     DEFAULT_CSS = """
     NewConfigFileScreen {
