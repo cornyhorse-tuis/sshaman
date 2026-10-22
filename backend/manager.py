@@ -7,7 +7,6 @@ SSH config files directly.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 from backend.host_entry import HostEntry
 from backend.ssh_config import SSHConfigError, SSHConfigManager
@@ -38,14 +37,14 @@ class SSHManager:
         ssh_dir: Path to the ``.ssh`` directory.  Defaults to ``~/.ssh``.
     """
 
-    def __init__(self, ssh_dir: Optional[Path] = None) -> None:
+    def __init__(self, ssh_dir: Path | None = None) -> None:
         self._config = SSHConfigManager(ssh_dir)
 
     # ------------------------------------------------------------------
     # Host queries
     # ------------------------------------------------------------------
 
-    def list_hosts(self, filter: Optional[str] = None) -> list[HostEntry]:
+    def list_hosts(self, filter: str | None = None) -> list[HostEntry]:
         """Return all SSH hosts, optionally filtered.
 
         Args:
@@ -69,7 +68,7 @@ class SSHManager:
             or (h.user and q in h.user.lower())
         ]
 
-    def get_host(self, name: str) -> Optional[HostEntry]:
+    def get_host(self, name: str) -> HostEntry | None:
         """Return a single host by its alias, or ``None`` if not found.
 
         Args:

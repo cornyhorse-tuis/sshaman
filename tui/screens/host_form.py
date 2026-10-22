@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
+from typing import ClassVar
 
 from textual.app import ComposeResult
+from textual.binding import BindingType
 from textual.containers import Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, Select
@@ -25,7 +26,7 @@ class HostFormScreen(ModalScreen[HostEntry | None]):
         default_config_file: Pre-selected config file name.
     """
 
-    BINDINGS = [("escape", "cancel", "Cancel")]
+    BINDINGS: ClassVar[list[BindingType]] = [("escape", "cancel", "Cancel")]
 
     DEFAULT_CSS = """
     HostFormScreen {
@@ -63,8 +64,8 @@ class HostFormScreen(ModalScreen[HostEntry | None]):
 
     def __init__(
         self,
-        host: Optional[HostEntry] = None,
-        config_files: Optional[list[str]] = None,
+        host: HostEntry | None = None,
+        config_files: list[str] | None = None,
         default_config_file: str = "sshaman-hosts",
     ) -> None:
         super().__init__()
@@ -175,7 +176,7 @@ class HostFormScreen(ModalScreen[HostEntry | None]):
                 port=port,
                 identity_file=Path(identity) if identity else None,
             )
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - show any construction failure to the user, never crash the form
             self.notify(f"Validation error: {exc}", severity="error")
             return
 

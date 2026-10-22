@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 from textual.app import ComposeResult
+from textual.binding import BindingType
 from textual.containers import Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Static
@@ -19,7 +22,7 @@ class HostDetailScreen(ModalScreen[str | None]):
       - ``None`` if the user presses Back
     """
 
-    BINDINGS = [
+    BINDINGS: ClassVar[list[BindingType]] = [
         ("escape", "go_back", "Back"),
         ("c", "do_connect", "SSH"),
         ("s", "do_sftp", "SFTP"),

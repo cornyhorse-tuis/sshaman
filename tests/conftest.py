@@ -6,11 +6,12 @@ write to real ``~/.ssh/`` or ``~/.config/sshaman/`` paths in tests.
 
 from __future__ import annotations
 
-import pytest
 from pathlib import Path
+
+import pytest
+
 from backend.manager import SSHManager
 from backend.ssh_config import SSHConfigManager
-
 
 # ---------------------------------------------------------------------------
 # SSH directory fixtures

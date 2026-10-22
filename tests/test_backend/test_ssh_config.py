@@ -9,14 +9,13 @@ import pytest
 
 from backend.host_entry import HostEntry
 from backend.ssh_config import (
+    _INCLUDE_DIRECTIVE,
     SSHConfigError,
     SSHConfigManager,
     _remove_block_from_text,
     _split_into_blocks,
     _validate_config_file_name,
-    _INCLUDE_DIRECTIVE,
 )
-
 
 # ---------------------------------------------------------------------------
 # _validate_config_file_name

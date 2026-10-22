@@ -16,7 +16,6 @@ from click.testing import CliRunner
 from backend.manager import SSHManager
 from cli.sshaman_cli import cli
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

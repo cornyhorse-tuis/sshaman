@@ -13,8 +13,8 @@ from textual.widgets import Button, DataTable, Input
 from backend.host_entry import HostEntry
 from backend.manager import SSHManager
 from tui.app import SSHaManApp
-from tui.screens.confirm import ConfirmScreen
 from tui.screens.config_files import ConfigFilesScreen, NewConfigFileScreen
+from tui.screens.confirm import ConfirmScreen
 from tui.screens.host_detail import HostDetailScreen
 from tui.screens.host_form import HostFormScreen
 
@@ -65,7 +65,7 @@ class TestAppStartup:
         """App should compose Header and Footer."""
         app = SSHaManApp(manager=tui_manager)
         async with app.run_test(size=SCREEN_SIZE) as _:
-            from textual.widgets import Header, Footer
+            from textual.widgets import Footer, Header
 
             assert len(app.query(Header)) == 1
             assert len(app.query(Footer)) == 1
@@ -160,7 +160,7 @@ class TestSSHConnection:
             await pilot.pause()
 
         assert app.return_value is not None
-        action, host = app.return_value
+        action, _host = app.return_value
         assert action == "ssh"
 
     async def test_connect_sftp_exits(self, tui_manager: SSHManager) -> None:
@@ -174,7 +174,7 @@ class TestSSHConnection:
             await pilot.pause()
 
         assert app.return_value is not None
-        action, host = app.return_value
+        action, _host = app.return_value
         assert action == "sftp"
 
     async def test_connect_ssh_no_selection(
