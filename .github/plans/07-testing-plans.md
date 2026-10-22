@@ -84,6 +84,7 @@ def test_set_permissions_noop_when_already_correct(tmp_path, monkeypatch):
     monkeypatch.setattr(os, "chmod", lambda p, m: calls.append((p, m)))
 
     from backend.ssh_config import _set_permissions, _FILE_MODE
+
     _set_permissions(f, _FILE_MODE)
     assert calls == []  # no chmod needed
 ```
@@ -107,12 +108,20 @@ def test_migrate_force_overwrites_existing_target(legacy_config_dir, config_mana
     from backend.migrate import migrate
 
     # First migration creates the file
-    migrate(source=legacy_config_dir, config_manager=config_manager,
-            config_file="target", force=False)
+    migrate(
+        source=legacy_config_dir,
+        config_manager=config_manager,
+        config_file="target",
+        force=False,
+    )
 
     # Second migration with force=True should succeed
-    result = migrate(source=legacy_config_dir, config_manager=config_manager,
-                     config_file="target", force=True)
+    result = migrate(
+        source=legacy_config_dir,
+        config_manager=config_manager,
+        config_file="target",
+        force=True,
+    )
 
     assert len(result.migrated) > 0
     assert not result.errors
@@ -200,9 +209,12 @@ async def test_host_form_shows_validation_error(manager, monkeypatch):
 
         # Make HostEntry raise during construction
         from backend.host_entry import HostEntry
+
         original_init = HostEntry.__init__
+
         def broken_init(self, **kwargs):
             raise ValueError("synthetic validation error")
+
         monkeypatch.setattr(HostEntry, "__init__", broken_init)
 
         await pilot.click("#btn-save")
@@ -235,8 +247,11 @@ async def test_get_selected_host_name_returns_none_on_exception(manager, monkeyp
     async with app.run_test() as pilot:
         await pilot.pause()
         table = app.query_one("#host-table", DataTable)
-        monkeypatch.setattr(table, "coordinate_to_cell_key",
-                            lambda coord: (_ for _ in ()).throw(IndexError("bad")))
+        monkeypatch.setattr(
+            table,
+            "coordinate_to_cell_key",
+            lambda coord: (_ for _ in ()).throw(IndexError("bad")),
+        )
         assert app._get_selected_host_name() is None
 ```
 
@@ -296,6 +311,7 @@ def action_manage_files(self) -> None:
 ```python
 if ctx.invoked_subcommand is None:
     from tui.app import SSHaManApp
+
     app = SSHaManApp(manager=ctx.obj["manager"])
     result = app.run()
     if result:
@@ -313,6 +329,7 @@ if ctx.invoked_subcommand is None:
 def test_cli_no_subcommand_launches_tui(manager, monkeypatch):
     """Invoking `sshaman` with no subcommand launches the TUI."""
     from unittest.mock import MagicMock
+
     mock_app = MagicMock()
     mock_app.run.return_value = None
 
@@ -327,13 +344,16 @@ def test_cli_no_subcommand_launches_tui(manager, monkeypatch):
 def test_cli_no_subcommand_tui_ssh_action(manager, monkeypatch):
     """TUI returning an ssh action triggers os.execvp."""
     from unittest.mock import MagicMock
+
     mock_app = MagicMock()
     mock_app.run.return_value = ("ssh", "myhost")
 
     monkeypatch.setattr("cli.sshaman_cli.SSHaManApp", lambda **kw: mock_app)
 
     execvp_calls = []
-    monkeypatch.setattr(os, "execvp", lambda cmd, args: execvp_calls.append((cmd, args)))
+    monkeypatch.setattr(
+        os, "execvp", lambda cmd, args: execvp_calls.append((cmd, args))
+    )
 
     runner = CliRunner()
     result = runner.invoke(cli, [], obj={"manager": manager})
@@ -356,10 +376,16 @@ def test_cli_no_subcommand_tui_ssh_action(manager, monkeypatch):
 ```python
 def test_show_all_fields(manager):
     """show command renders all optional fields."""
-    entry = HostEntry(name="full", hostname="1.2.3.4", user="admin",
-                      port=2222, proxy_jump="bastion",
-                      forward_agent=True, local_forwards=["8080:localhost:80"],
-                      extra_options={"RequestTTY": "yes"})
+    entry = HostEntry(
+        name="full",
+        hostname="1.2.3.4",
+        user="admin",
+        port=2222,
+        proxy_jump="bastion",
+        forward_agent=True,
+        local_forwards=["8080:localhost:80"],
+        extra_options={"RequestTTY": "yes"},
+    )
     manager.add_host(entry, config_file="test")
 
     runner = CliRunner()
@@ -388,8 +414,11 @@ def test_host_lifecycle_cli(manager):
     obj = {"manager": manager}
 
     # Add
-    r = runner.invoke(cli, ["add", "web1", "--hostname", "10.0.0.1",
-                            "--user", "deploy", "--port", "22"], obj=obj)
+    r = runner.invoke(
+        cli,
+        ["add", "web1", "--hostname", "10.0.0.1", "--user", "deploy", "--port", "22"],
+        obj=obj,
+    )
     assert r.exit_code == 0
 
     # List
@@ -450,8 +479,9 @@ def test_migrate_dry_run_then_live(legacy_config_dir, manager):
     obj = {"manager": manager}
 
     # Dry run
-    r = runner.invoke(cli, ["migrate", "--source", str(legacy_config_dir),
-                            "--dry-run"], obj=obj)
+    r = runner.invoke(
+        cli, ["migrate", "--source", str(legacy_config_dir), "--dry-run"], obj=obj
+    )
     assert "dry run" in r.output.lower()
     assert "Would write" in r.output
 
@@ -460,8 +490,9 @@ def test_migrate_dry_run_then_live(legacy_config_dir, manager):
     assert r.exit_code == 0
 
     # Force re-run
-    r = runner.invoke(cli, ["migrate", "--source", str(legacy_config_dir),
-                            "--force"], obj=obj)
+    r = runner.invoke(
+        cli, ["migrate", "--source", str(legacy_config_dir), "--force"], obj=obj
+    )
     assert r.exit_code == 0
 ```
 

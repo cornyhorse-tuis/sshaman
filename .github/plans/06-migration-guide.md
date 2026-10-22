@@ -113,6 +113,7 @@ from pathlib import Path
 from backend.host_entry import HostEntry
 from backend.ssh_config import SSHConfigManager
 
+
 def discover_json_configs(source: Path) -> list[tuple[Path, dict]]:
     """Walk the source directory and find all .json config files."""
     configs = []
@@ -122,39 +123,51 @@ def discover_json_configs(source: Path) -> list[tuple[Path, dict]]:
             configs.append((json_file, data))
     return configs
 
-def convert_json_to_host_entry(json_path: Path, data: dict, source_root: Path) -> tuple[HostEntry, list[str]]:
+
+def convert_json_to_host_entry(
+    json_path: Path, data: dict, source_root: Path
+) -> tuple[HostEntry, list[str]]:
     """Convert a JSON config dict to a HostEntry, returning warnings."""
     warnings = []
-    
+
     if data.get("password"):
-        warnings.append(f"Password for '{data['alias']}' will be dropped. Use SSH keys instead.")
-    
+        warnings.append(
+            f"Password for '{data['alias']}' will be dropped. Use SSH keys instead."
+        )
+
     if data.get("start_commands"):
         warnings.append(f"start_commands for '{data['alias']}' will not be migrated.")
-    
+
     # Compute group path for comment
     rel = json_path.parent.relative_to(source_root)
     comment = f"Migrated from {rel}/" if str(rel) != "." else "Migrated by SSHaMan"
-    
+
     local_forwards = []
-    for fp in (data.get("forward_ports") or []):
+    for fp in data.get("forward_ports") or []:
         if fp:  # skip empty strings
             local_forwards.append(fp)
-    
+
     entry = HostEntry(
         name=data["alias"],
         hostname=data["host"],
         user=data.get("user"),
         port=data.get("port", 22),
-        identity_file=Path(data["identity_file"]) if data.get("identity_file") else None,
+        identity_file=Path(data["identity_file"])
+        if data.get("identity_file")
+        else None,
         local_forwards=local_forwards,
         comment=comment,
     )
-    
+
     return entry, warnings
 
-def migrate(source: Path, config_manager: SSHConfigManager, 
-            config_file: str = "sshaman-migrated", dry_run: bool = False) -> dict:
+
+def migrate(
+    source: Path,
+    config_manager: SSHConfigManager,
+    config_file: str = "sshaman-migrated",
+    dry_run: bool = False,
+) -> dict:
     """Run the migration. Returns summary dict."""
     ...
 ```

@@ -46,6 +46,7 @@ import pytest
 from pathlib import Path
 from backend.manager import SSHManager
 
+
 @pytest.fixture
 def ssh_dir(tmp_path: Path) -> Path:
     """Create a temporary ~/.ssh/ equivalent with config.d/."""
@@ -53,13 +54,14 @@ def ssh_dir(tmp_path: Path) -> Path:
     ssh.mkdir(mode=0o700)
     config_d = ssh / "config.d"
     config_d.mkdir(mode=0o700)
-    
+
     # Write a base config with Include
     config = ssh / "config"
     config.write_text("Include ~/.ssh/config.d/*\n")  # Will need path fixup
     config.chmod(0o600)
-    
+
     return ssh
+
 
 @pytest.fixture
 def sample_config(ssh_dir: Path) -> Path:
@@ -81,6 +83,7 @@ def sample_config(ssh_dir: Path) -> Path:
     )
     config_file.chmod(0o600)
     return ssh_dir
+
 
 @pytest.fixture
 def manager(sample_config: Path) -> SSHManager:
@@ -165,28 +168,40 @@ Using Click's `CliRunner`:
 from click.testing import CliRunner
 from cli.sshaman_cli import cli
 
+
 def test_list_hosts(manager, ssh_dir):
     runner = CliRunner()
-    result = runner.invoke(cli, ['list', '--ssh-dir', str(ssh_dir)])
+    result = runner.invoke(cli, ["list", "--ssh-dir", str(ssh_dir)])
     assert result.exit_code == 0
-    assert 'web-server' in result.output
-    assert 'db-server' in result.output
+    assert "web-server" in result.output
+    assert "db-server" in result.output
+
 
 def test_add_host(manager, ssh_dir):
     runner = CliRunner()
-    result = runner.invoke(cli, [
-        'add', 'new-host',
-        '--hostname', '10.0.0.1',
-        '--user', 'root',
-        '--ssh-dir', str(ssh_dir)
-    ])
+    result = runner.invoke(
+        cli,
+        [
+            "add",
+            "new-host",
+            "--hostname",
+            "10.0.0.1",
+            "--user",
+            "root",
+            "--ssh-dir",
+            str(ssh_dir),
+        ],
+    )
     assert result.exit_code == 0
     # Verify it was actually written
     ...
 
+
 def test_remove_host_with_confirm(manager, ssh_dir):
     runner = CliRunner()
-    result = runner.invoke(cli, ['remove', 'web-server', '--ssh-dir', str(ssh_dir)], input='y\n')
+    result = runner.invoke(
+        cli, ["remove", "web-server", "--ssh-dir", str(ssh_dir)], input="y\n"
+    )
     assert result.exit_code == 0
     ...
 ```
@@ -201,12 +216,14 @@ Using Textual's `pilot`:
 from textual.pilot import Pilot
 from tui.app import SSHaManApp
 
+
 async def test_host_list_displays(manager):
     app = SSHaManApp(manager=manager)
     async with app.run_test() as pilot:
         # Check that hosts are displayed
         table = app.query_one("#host-table")
         assert table.row_count == 2
+
 
 async def test_add_host_screen(manager):
     app = SSHaManApp(manager=manager)
@@ -215,11 +232,12 @@ async def test_add_host_screen(manager):
         # Verify add screen is displayed
         ...
 
+
 async def test_connect_exits_with_command(manager):
     app = SSHaManApp(manager=manager)
     async with app.run_test() as pilot:
         await pilot.press("enter")  # Select first host
-        await pilot.press("c")     # Connect
+        await pilot.press("c")  # Connect
         # Verify app exited with connect command
         ...
 ```

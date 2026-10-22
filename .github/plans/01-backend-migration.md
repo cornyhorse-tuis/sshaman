@@ -77,27 +77,33 @@ from pydantic import BaseModel, Field
 from pathlib import Path
 from typing import Optional
 
+
 class HostEntry(BaseModel):
     """Represents a single SSH Host block."""
-    name: str                                    # The Host alias (e.g., "web-prod")
-    hostname: str                                # HostName directive
+
+    name: str  # The Host alias (e.g., "web-prod")
+    hostname: str  # HostName directive
     user: Optional[str] = None
     port: int = Field(default=22, ge=1, le=65535)
     identity_file: Optional[Path] = None
     proxy_jump: Optional[str] = None
     forward_agent: Optional[bool] = None
-    local_forwards: list[str] = Field(default_factory=list)   # -L equivalents
+    local_forwards: list[str] = Field(default_factory=list)  # -L equivalents
     remote_forwards: list[str] = Field(default_factory=list)  # -R equivalents
-    extra_options: dict[str, str] = Field(default_factory=dict)  # Catch-all for any SSH option
-    source_file: Optional[Path] = None           # Which config.d file this came from
-    comment: Optional[str] = None                # Comment above the Host block
+    extra_options: dict[str, str] = Field(
+        default_factory=dict
+    )  # Catch-all for any SSH option
+    source_file: Optional[Path] = None  # Which config.d file this came from
+    comment: Optional[str] = None  # Comment above the Host block
 
     def to_ssh_config(self) -> str:
         """Serialize to SSH config block text."""
         ...
 
     @classmethod
-    def from_ssh_config(cls, block: str, source_file: Path | None = None) -> "HostEntry":
+    def from_ssh_config(
+        cls, block: str, source_file: Path | None = None
+    ) -> "HostEntry":
         """Parse a Host block string into a HostEntry."""
         ...
 ```
@@ -121,6 +127,7 @@ Responsibilities:
 
 ```python
 from pathlib import Path
+
 
 class SSHConfigManager:
     """Low-level SSH config file operations."""
@@ -206,14 +213,11 @@ class SSHManager:
         """Build an SFTP command string for a host."""
         ...
 
-    def list_config_files(self) -> list[Path]:
-        ...
+    def list_config_files(self) -> list[Path]: ...
 
-    def create_config_file(self, name: str) -> Path:
-        ...
+    def create_config_file(self, name: str) -> Path: ...
 
-    def delete_config_file(self, name: str) -> None:
-        ...
+    def delete_config_file(self, name: str) -> None: ...
 ```
 
 ---
